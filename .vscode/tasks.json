@@ -90,6 +90,14 @@
       }
     },
     {
+      "label": "DeployToHANADB:.env2",
+      "type": "shell",
+      "command": "eval $(cat ${workspaceFolder}/env/.env2) cds deploy --to hana --auto-undeploy",
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
       "label": "PreLaunchTask for S4HCP-ServiceOrder-Odata",
       "type": "process",
       "command": "npx",
@@ -98,7 +106,8 @@
         "gen-entrypoint"
       ],
       "dependsOn": [
-        "BuildMDK"
+        "BuildMDK",
+        "DeployToHANADB:.env2"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

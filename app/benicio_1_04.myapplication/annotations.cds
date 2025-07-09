@@ -80,7 +80,7 @@ annotate service.CustomerMessages with @(
             {
                 $Type : 'UI.DataField',
                 Value : S4HCP_ServiceOrder_ServiceOrder,
-                Label : 'ServiceOrder',
+                Label : 'Service order',
             },
         ],
     }
@@ -104,7 +104,7 @@ annotate service.CustomerMessages with {
             Label : 'Service Order',
         },
         Common.ValueListWithFixedValues : true,
-    )
+        )
 };
 
 annotate service.A_ServiceOrder with {
