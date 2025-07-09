@@ -13,7 +13,7 @@ entity CustomerMessages : cuid {
   messageSentiment: String(20);
   titleCustomerLanguage: String(100);
   customerId: String(50);
-  productId: String(50);
+  productId: String(50); 
   summaryCustomerLanguage: String(500);
   originatingCountry: String(100);
   sourceLanguage: String(10);
