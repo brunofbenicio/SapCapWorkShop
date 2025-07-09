@@ -15,31 +15,6 @@
       }
     },
     {
-      "label": "npm-install",
-      "type": "process",
-      "command": "npm",
-      "args": [
-        "install"
-      ],
-      "dependsOn": [
-        "kill-cds-processes"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      }
-    },
-    {
-      "label": "BuildMDK",
-      "type": "shell",
-      "command": "if npm list @sap/mdk-tools --depth=0 > /dev/null 2>&1; then npx mdk build --target module --ui5 --recursive;fi",
-      "dependsOn": [
-        "npm-install"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      }
-    },
-    {
       "type": "dpt.ptdeploy",
       "label": "Deploy Benicio_1_04",
       "taskType": "Deploy"
@@ -69,6 +44,61 @@
       "dependsOn": [
         "BuildMDK",
         "DeployToHANADB:.env1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "npm-install",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "install"
+      ],
+      "dependsOn": [
+        "kill-cds-processes"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "BuildMDK",
+      "type": "shell",
+      "command": "if npm list @sap/mdk-tools --depth=0 > /dev/null 2>&1; then npx mdk build --target module --ui5 --recursive;fi",
+      "dependsOn": [
+        "npm-install"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "dev-project",
+      "type": "process",
+      "command": "npx",
+      "args": [
+        "dev-cap-tools",
+        "gen-entrypoint"
+      ],
+      "dependsOn": [
+        "BuildMDK"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "PreLaunchTask for S4HCP-ServiceOrder-Odata",
+      "type": "process",
+      "command": "npx",
+      "args": [
+        "dev-cap-tools",
+        "gen-entrypoint"
+      ],
+      "dependsOn": [
+        "BuildMDK"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

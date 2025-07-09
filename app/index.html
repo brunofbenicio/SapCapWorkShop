@@ -27,7 +27,7 @@
                     return Controller.extend("PreviewController", {
                         onInit: function () {
 
-                            const data = {"Services":[{"ServiceName":"benicio_1_04Srv","DetailsURL":"./service/benicio_1_04/","Metadata":"./service/benicio_1_04/$metadata","Entities":[{"Name":"CustomerMessages","URL":"./service/benicio_1_04/CustomerMessages","FioriURL":"$fiori-preview/benicio_1_04Srv/CustomerMessages#preview-app"}],"EntitiesCount":1}]}
+                            const data = {"Services":[{"ServiceName":"benicio_1_04Srv","DetailsURL":"./service/benicio_1_04/","Metadata":"./service/benicio_1_04/$metadata","Entities":[{"Name":"CustomerMessages","URL":"./service/benicio_1_04/CustomerMessages","FioriURL":"$fiori-preview/benicio_1_04Srv/CustomerMessages#preview-app"},{"Name":"A_ServiceOrder","URL":"./service/benicio_1_04/A_ServiceOrder","FioriURL":"$fiori-preview/benicio_1_04Srv/A_ServiceOrder#preview-app"}],"EntitiesCount":2}]}
                             this.getView().setModel(new JSONModel(data));
                         }
                     });

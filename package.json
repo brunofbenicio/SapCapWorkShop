@@ -17,7 +17,9 @@
     "@sap/xssec": "^4.8.0",
     "express": "^4",
     "hdb": "^2.25.1",
-    "passport": "^0.7.0"
+    "passport": "^0.7.0",
+    "@sap-cloud-sdk/connectivity": "^3",
+    "@sap-cloud-sdk/resilience": "^3"
   },
   "engines": {
     "node": ">=20"
@@ -47,6 +49,17 @@
         "[production]": {
           "kind": "xsuaa"
         }
+      },
+      "S4HCP_ServiceOrder_Odata": {
+        "kind": "odata-v2",
+        "model": "srv/external/S4HCP_ServiceOrder_Odata",
+        "[production]": {
+          "credentials": {
+            "destination": "S4HCP-ServiceOrder-Odata"
+          }
+        },
+        "csrf": true,
+        "csrfInBatch": true
       }
     }
   },
