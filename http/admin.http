@@ -1,0 +1,117 @@
+# Reference data and settings (AdminService, /service/admin)
+#
+# Tags and response templates are read by everyone, created by agents and changed or deleted by their
+# creator or by an administrator. The settings are changed by administrators only. Start the app
+# with `npm run cds-watch` (http://localhost:4004) and run the requests top down. The users are
+# the mocked users (the password is the user name).
+
+@host = http://localhost:4004
+
+### Tags
+# expect: 200
+GET {{host}}/service/admin/Tags?$orderby=code&$select=code,title
+Authorization: Basic viewer viewer
+
+### Search the tags
+# expect: 200
+GET {{host}}/service/admin/Tags?$search=delivery&$select=code,title
+Authorization: Basic viewer viewer
+
+### A viewer may not create a tag
+# expect: 403
+POST {{host}}/service/admin/Tags
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "code": "recall",
+  "title": "Product recall"
+}
+
+### An agent creates a tag
+# expect: 201
+POST {{host}}/service/admin/Tags
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "code": "recall",
+  "title": "Product recall"
+}
+
+### The code must be a slug (lower case words separated by hyphens)
+# expect: 400
+POST {{host}}/service/admin/Tags
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "code": "Not A Slug",
+  "title": "Invalid"
+}
+
+### The creator changes the tag
+# expect: 200
+PATCH {{host}}/service/admin/Tags('recall')
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "title": "Product recall (safety)"
+}
+
+### Delete the tag
+# expect: 204
+DELETE {{host}}/service/admin/Tags('recall')
+Authorization: Basic agent agent
+
+### Response templates that are valid now
+# expect: 200
+GET {{host}}/service/admin/ResponseTemplates?$orderby=code&$select=code,title,messageCategory,validFrom,validTo
+Authorization: Basic viewer viewer
+
+### The templates as they were valid on 1 March 2025 (time travel with sap-valid-at)
+# expect: 200
+GET {{host}}/service/admin/ResponseTemplates?$orderby=code&$select=code,title,validFrom,validTo&sap-valid-at=2025-03-01T00:00:00Z
+Authorization: Basic viewer viewer
+
+### All versions of one template (sap-valid-from and sap-valid-to select a period)
+# expect: 200
+GET {{host}}/service/admin/ResponseTemplates?$filter=code%20eq%20'warranty-claim'&$orderby=validFrom&sap-valid-from=2024-01-01T00:00:00Z&sap-valid-to=2026-01-01T00:00:00Z
+Authorization: Basic viewer viewer
+
+### The application settings
+# expect: 200
+GET {{host}}/service/admin/Settings
+Authorization: Basic viewer viewer
+
+### An agent may not change the settings
+# expect: 403
+PATCH {{host}}/service/admin/Settings
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "autoEnrichment": false
+}
+
+### An administrator switches the AI enrichment off
+# expect: 200
+PATCH {{host}}/service/admin/Settings
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "autoEnrichment": false
+}
+
+### ...and selects the model for the next time
+# expect: 200
+PATCH {{host}}/service/admin/Settings
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "autoEnrichment": true,
+  "aiModelName": "gpt-4.1-mini"
+}

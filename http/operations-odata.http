@@ -1,0 +1,88 @@
+# Work queue of the agents as OData V4 (OperationsService, /service/operations)
+#
+# Start the app with `npm run cds-watch` (http://localhost:4004). Run the requests top down: the
+# later requests use the message that the earlier ones change. The same operations are available
+# as REST in operations-rest.http. The users are the mocked users (the password is the user name).
+
+@host = http://localhost:4004
+
+### The most urgent open messages
+# expect: 200
+GET {{host}}/service/operations/CustomerMessages?$filter=status%20eq%20'Open'&$orderby=priorityScore%20desc,customerMessageID&$top=3&$select=customerMessageID,customerName,priorityScore,status
+Authorization: Basic viewer viewer
+
+### Message counts in total, per status, per category and per urgency (unbound function)
+# expect: 200
+GET {{host}}/service/operations/statistics()
+Authorization: Basic viewer viewer
+
+### Suggested priority of a message (bound function)
+# expect: 200
+GET {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.suggestedPriority()
+Authorization: Basic viewer viewer
+
+### Add a reply (bound action, emits the event ReplyAdded)
+# expect: 200
+POST {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.addReply
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "author": "Support Team",
+  "text": "A technician will visit you within 48 hours."
+}
+
+### A reply needs an author and a text
+# expect: 400
+POST {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.addReply
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "author": "Support Team"
+}
+
+### The reply is part of the message
+# expect: 200
+GET {{host}}/service/operations/CustomerMessageReplies?$filter=message_ID%20eq%2008bb27b2-9357-4598-9ea3-6b9f8dcb6d99&$select=author,text&$orderby=sentAt
+Authorization: Basic viewer viewer
+
+### A viewer may not resolve a message
+# expect: 403
+POST {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.markAsResolved
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "resolution": "Compressor replaced"
+}
+
+### Resolve the message (bound action, emits the event MessageResolved)
+# expect: 200
+POST {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.markAsResolved
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "resolution": "Compressor replaced"
+}
+
+### A resolved message cannot be resolved again
+# expect: 409
+POST {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.markAsResolved
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "resolution": "Once more"
+}
+
+### The view is read-only: messages are created in the app service
+# expect: 405
+POST {{host}}/service/operations/CustomerMessages
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "customerMessageID": 9002
+}

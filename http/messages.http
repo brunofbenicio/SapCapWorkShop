@@ -1,0 +1,162 @@
+# Customer messages: OData V4 service of the agents' app (benicio_1_04Srv)
+#
+# Start the app with `npm run cds-watch` (http://localhost:4004) and send the requests one by one
+# with the VS Code extension "REST Client" or the IntelliJ HTTP client. Run them top down: the later
+# requests use the message that the earlier ones create.
+#
+# The users are the mocked users of the development profile (the password is the user name):
+# viewer reads, agent also creates and changes its own messages, admin may do everything.
+# The line "# expect: <status>" documents the expected status; test/http-files.test.js sends every
+# request of this directory to the application and checks it.
+
+@host = http://localhost:4004
+
+### Service document
+# expect: 200
+GET {{host}}/service/benicio_1_04/
+Authorization: Basic viewer viewer
+
+### Metadata (the data model as EDMX)
+# expect: 200
+GET {{host}}/service/benicio_1_04/$metadata
+Authorization: Basic viewer viewer
+
+### First messages with a selection of fields, sorted and counted
+# expect: 200
+GET {{host}}/service/benicio_1_04/CustomerMessages?$select=customerMessageID,customerName,productName,priorityScore,status&$orderby=customerMessageID&$top=5&$count=true
+Authorization: Basic viewer viewer
+
+### Open messages about freezers
+# expect: 200
+GET {{host}}/service/benicio_1_04/CustomerMessages?$filter=status%20eq%20'Open'%20and%20productName%20eq%20'Freezer'&$select=customerMessageID,customerName
+Authorization: Basic viewer viewer
+
+### Full-text search in names, IDs, texts and tags
+# expect: 200
+GET {{host}}/service/benicio_1_04/CustomerMessages?$search=warranty&$select=customerMessageID,customerName&$count=true
+Authorization: Basic viewer viewer
+
+### Messages that carry the tag "warranty", with their tags
+# expect: 200
+GET {{host}}/service/benicio_1_04/CustomerMessages?$filter=tags/any(t:t/tag_code%20eq%20'warranty')&$select=customerMessageID&$expand=tags($expand=tag($select=title))
+Authorization: Basic viewer viewer
+
+### One message with its replies and tags
+# expect: 200
+GET {{host}}/service/benicio_1_04/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99,IsActiveEntity=true)?$expand=replies($orderby=sentAt),tags($expand=tag)
+Authorization: Basic viewer viewer
+
+### Message categories in German (Accept-Language or the URL parameter sap-locale=de select the language)
+# expect: 200
+GET {{host}}/service/benicio_1_04/MessageCategories
+Authorization: Basic viewer viewer
+Accept-Language: de
+
+### A viewer may not create a message
+# expect: 403
+POST {{host}}/service/benicio_1_04/CustomerMessages
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "customerMessageID": 9001
+}
+
+### Create a message: this starts a draft (the ID is chosen here so that the next requests can use it)
+# expect: 201
+POST {{host}}/service/benicio_1_04/CustomerMessages
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "ID": "a0000000-0000-4000-8000-000000000001",
+  "customerMessageID": 9001,
+  "customerName": "Erika Mustermann",
+  "productName": "Dishwasher",
+  "customerId": "C-90001",
+  "productId": "DSH-500",
+  "titleCustomerLanguage": "Geschirrspüler pumpt nicht ab",
+  "originatingCountry": "Germany",
+  "sourceLanguage": "German",
+  "fullMessageCustomerLanguage": "Nach jedem Spülgang bleibt Wasser im Geschirrspüler stehen."
+}
+
+### Change the draft
+# expect: 200
+PATCH {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=false)
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "customerName": "Erika Musterfrau"
+}
+
+### Save the draft: it becomes an active message
+# expect: 201
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=false)/benicio_1_04Srv.draftActivate
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{}
+
+### The customerMessageID must be unique: this draft uses the ID of the message above...
+# expect: 201
+POST {{host}}/service/benicio_1_04/CustomerMessages
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "ID": "a0000000-0000-4000-8000-000000000002",
+  "customerMessageID": 9001
+}
+
+### ...so saving it fails with 409
+# expect: 409
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000002,IsActiveEntity=false)/benicio_1_04Srv.draftActivate
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{}
+
+### Discard that draft
+# expect: 204
+DELETE {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000002,IsActiveEntity=false)
+Authorization: Basic agent agent
+
+### Change the saved message: edit creates a new draft of it
+# expect: 201
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=true)/benicio_1_04Srv.draftEdit
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "PreserveChanges": true
+}
+
+### Change the new draft
+# expect: 200
+PATCH {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=false)
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "productName": "Dishwasher Pro"
+}
+
+### Save the changes
+# expect: 200
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=false)/benicio_1_04Srv.draftActivate
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{}
+
+### A viewer may not delete the message (agents delete only their own messages, administrators any)
+# expect: 403
+DELETE {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=true)
+Authorization: Basic viewer viewer
+
+### Delete the message (the creator may)
+# expect: 204
+DELETE {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=true)
+Authorization: Basic agent agent

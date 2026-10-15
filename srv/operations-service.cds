@@ -5,6 +5,7 @@ using { Benicio_1_04 as my } from '../db/schema.cds';
  * operations that change their processing state.
  */
 @path : '/service/operations'
+@protocol : [ 'odata-v4', { kind : 'rest', path : '/rest/service/operations' } ]
 service OperationsService
 {
     type PriorityLevel : String enum
