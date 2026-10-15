@@ -69,6 +69,32 @@ entity CustomerMessages : cuid, managed
     category : Association to one MessageCategories
         on category.code = messageCategory
         @title : '{i18n>Category}';
+
+    /**
+     * Priority derived from the urgency (High 3, Medium 2, Low 1) and the
+     * sentiment (Negative 2, Neutral 1, Positive 0). Calculated on read.
+     */
+    @title : '{i18n>PriorityScore}'
+    priorityScore : Integer = (
+        case
+            when messageUrgency = 'High' then 3
+            when messageUrgency = 'Medium' then 2
+            when messageUrgency = 'Low' then 1
+            else 0
+        end
+        + case
+            when messageSentiment = 'Negative' then 2
+            when messageSentiment = 'Neutral' then 1
+            else 0
+        end
+    );
+
+    /**
+     * English title when available, otherwise the title in the customer's
+     * language. Stored in the database, so it can be sorted and searched cheaply.
+     */
+    @title : '{i18n>DisplayTitle}'
+    displayTitle : String(100) = coalesce(titleEnglish, titleCustomerLanguage) stored;
 }
 
 annotate CustomerMessages with @assert.unique :
