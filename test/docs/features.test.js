@@ -5,6 +5,9 @@ const ROOT = path.resolve(__dirname, '../..');
 const pkg = require('../../package.json');
 const page = fs.readFileSync(path.join(ROOT, 'docs/features.md'), 'utf8');
 
+// Output folders of npm run openapi and npm run asyncapi: git ignores them, so a fresh checkout has none.
+const GENERATED = ['docs/openapi/', 'docs/asyncapi/'];
+
 const SKIPPED = new Set(['node_modules', 'gen', 'coverage', '.git', '@cds-models', 'docs/openapi', 'docs/asyncapi']);
 
 /** All files below a folder of the project, as paths relative to the project. */
@@ -24,14 +27,17 @@ function filesIn(folder, matches) {
 
 // What the page names in backticks
 const code = [...page.matchAll(/`([^`\n]+)`/g)].map(match => match[1]);
-const REPO_PATH = /^(?:app|db|srv|test|http|docs|scripts|fts)\/[\w@./-]+$|^[\w.-]+\.(?:json|yaml|mjs|md)$|^(?:Dockerfile|\.dockerignore)$/;
+const REPO_PATH = /^(?:app|db|srv|test|http|docs|scripts|fts|\.github)\/[\w@./-]+$|^[\w.-]+\.(?:json|yaml|mjs|md)$|^(?:Dockerfile|\.dockerignore)$/;
 const paths = [...new Set(code.filter(entry => REPO_PATH.test(entry)))];
 const named = new Set(paths);
 
 describe('docs/features.md', () => {
     it('names only files and folders that exist', () => {
         expect(paths.length).toBeGreaterThan(80);
-        for (const entry of paths) expect([entry, fs.existsSync(path.join(ROOT, entry))]).toEqual([entry, true]);
+        expect(paths).toEqual(expect.arrayContaining(GENERATED));
+        for (const entry of paths.filter(candidate => !GENERATED.includes(candidate))) {
+            expect([entry, fs.existsSync(path.join(ROOT, entry))]).toEqual([entry, true]);
+        }
     });
 
     it('names only npm scripts and commands that exist', () => {
@@ -84,7 +90,7 @@ describe('docs/features.md', () => {
     });
 
     it('names the deployment files and the scripts', () => {
-        const files = ['mta.yaml', 'Dockerfile', '.dockerignore', 'xs-security.json', 'jsconfig.json', 'eslint.config.mjs', ...filesIn('scripts', () => true)];
+        const files = ['mta.yaml', 'Dockerfile', '.dockerignore', '.github/workflows/ci.yml', 'xs-security.json', 'jsconfig.json', 'eslint.config.mjs', ...filesIn('scripts', () => true)];
 
         expect(files.filter(file => !named.has(file))).toEqual([]);
     });
