@@ -48,6 +48,12 @@ Fiori elements UI.
   `MessageAnalytics?$apply=groupby((messageCategory),aggregate($count as messages))` or
   `...groupby((originatingCountry),aggregate(priorityScore with average as averageScore))`.
   Groupable: category, urgency, sentiment, country, status. Viewer role required.
+- Limits page sizes and searches selected elements (`srv/query-options.cds`): a list request
+  returns 50 rows without `$top` (`AdminService` 100, `AnalyticsService` 200) and at most
+  200 rows (500 / 1000), with `@odata.nextLink` for the next page. `$search` looks at the
+  names, IDs and texts of a message and at the titles of its tags, not at status, language or
+  audit fields. `@Capabilities` tell Fiori elements what is not sortable or filterable (long
+  texts) and not searchable (analytics); expands deeper than three levels are rejected.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
@@ -188,6 +194,7 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | `srv/admin-service.cds` | `AdminService` for tags, response templates and settings, with its restrictions |
 | `srv/authorization.cds` | Role-based and instance-based restrictions of `benicio_1_04Srv` and `OperationsService` |
 | `srv/analytics-service.cds` | `AnalyticsService`: read-only `MessageAnalytics` with `@Aggregation.ApplySupported` |
+| `srv/query-options.cds` | Page sizes (`@cds.query.limit`), search elements (`@cds.search`) and `@Capabilities` of the services |
 | `srv/operations-service.cds`, `srv/operations-service.js` | `OperationsService` with its action, functions and handlers |
 | `srv/code/message-events.js` | Subscribers of the events `MessageResolved` and `ReplyAdded` |
 | `srv/code/priority.js` | Maps the priority score to a priority level |
