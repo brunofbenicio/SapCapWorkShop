@@ -60,6 +60,11 @@ Content-Type: application/json
   "title": "Product recall (safety)"
 }
 
+### The change history of the tag
+# expect: 200
+GET {{host}}/service/admin/Tags('recall')/changes?$select=attribute,valueChangedFrom,valueChangedTo,createdBy&$orderby=createdAt
+Authorization: Basic viewer viewer
+
 ### Delete the tag
 # expect: 204
 DELETE {{host}}/service/admin/Tags('recall')

@@ -36,7 +36,7 @@ describe('REST protocol of the OperationsService', () => {
             const { status, data } = await GET(REST);
 
             expect(status).toBe(200);
-            expect(data.entities.map(entity => entity.name)).toEqual(['CustomerMessageReplies', 'CustomerMessages']);
+            expect(data.entities.map(entity => entity.name).sort()).toEqual(['ChangeView', 'CustomerMessageReplies', 'CustomerMessages']); // ChangeView: the change history
         });
 
         it('keeps the OData endpoint', async () => {
@@ -170,6 +170,17 @@ describe('REST protocol of the OperationsService', () => {
             await POST(`${REST}/CustomerMessages/${FREEZER_COMPRESSOR}/markAsResolved`, {});
 
             expect(received).toEqual([3166]);
+        });
+
+        it('reads the change history of a message by navigation only', async () => {
+            await POST(`${REST}/CustomerMessages/${FREEZER_COMPRESSOR}/markAsResolved`, {});
+
+            const history = await GET(`${REST}/CustomerMessages/${FREEZER_COMPRESSOR}/changes?$filter=attribute eq 'status' and modification eq 'update'`, ANY_STATUS);
+            const direct = await GET(`${REST}/ChangeView`, ANY_STATUS);
+
+            expect(history.status).toBe(200);
+            expect(history.data).toMatchObject([{ attribute: 'status', valueChangedFrom: 'Open', valueChangedTo: 'Resolved', createdBy: 'admin' }]);
+            expect(direct.status).toBe(405);
         });
 
         it('keeps the entities read-only', async () => {
