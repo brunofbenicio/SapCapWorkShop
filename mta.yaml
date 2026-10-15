@@ -1,0 +1,106 @@
+# Multi-target application descriptor for SAP BTP, Cloud Foundry environment (single tenant).
+#
+#   npm install -g mbt                       # Cloud MTA Build Tool, once
+#   mbt build                                # writes mta_archives/Benicio_1_04_1.0.0.mtar
+#   cf deploy mta_archives/Benicio_1_04_1.0.0.mtar
+#
+# Not included: the Fiori elements UI (app/) and an approuter. The application serves the OData,
+# REST and GraphQL APIs, which are called with a token of the XSUAA instance. For the multitenancy
+# profile (SaaS) the descriptor needs more, see "Multitenancy" in the README.
+_schema-version: 3.3.0
+ID: Benicio_1_04
+version: 1.0.0
+description: "Customer Messages application built with SAP CAP, enriching incoming messages with GenAI (translation, summary, category, urgency, sentiment)."
+
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+
+modules:
+  # The CAP server: gen/srv is written by "cds build --production".
+  - name: Benicio_1_04-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      memory: 512M
+      buildpack: nodejs_buildpack
+      # The health check of srv/server.js is public: 200 while the server works, 503 while it shuts down.
+      health-check-type: http
+      health-check-http-endpoint: /health
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. an approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: Benicio_1_04-auth
+      - name: Benicio_1_04-db
+      - name: Benicio_1_04-destination
+      - name: Benicio_1_04-logging
+      - name: Benicio_1_04-auditlog
+      # Optional, for real AI results: bind an existing SAP AI Core instance. Declare it under "resources"
+      # (type org.cloudfoundry.existing-service, service-name of the instance) and list it here.
+      # Without it the application runs, the AI fields stay empty and errors are logged.
+
+  # Deploys the tables and views to the HDI container (gen/db is written by "cds build").
+  - name: Benicio_1_04-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: Benicio_1_04-db
+
+resources:
+  # Authentication and authorization: scopes and role collections of xs-security.json.
+  - name: Benicio_1_04-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: Benicio_1_04-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+
+  # SAP HANA Cloud: the HDI container of the tables (the HANA Cloud instance must be mapped to the space).
+  - name: Benicio_1_04-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  # Destination service: holds the destination S4HCP-ServiceOrder-Odata to the S/4HANA Cloud system.
+  # The destination is not created here, because its URL and credentials belong to the customer system.
+  # Create it in the BTP cockpit (subaccount or this instance) after the deployment.
+  - name: Benicio_1_04-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+
+  # Application logging: the application logs are collected by SAP Cloud Logging / Application Logging.
+  - name: Benicio_1_04-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: standard
+
+  # Audit log of @cap-js/audit-logging (personal data access and changes).
+  - name: Benicio_1_04-auditlog
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: auditlog
+      service-plan: premium
