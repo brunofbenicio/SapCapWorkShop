@@ -6,6 +6,9 @@ English, summarized, categorized and rated for urgency and sentiment. The applic
 generated with SAP Build Code (LCAP) and is exposed as an OData V4 service with a
 Fiori elements UI.
 
+[`docs/features.md`](docs/features.md) maps every CAP feature of the application to its files, the
+commands to try it and the tests; a test keeps that page complete.
+
 ## What it does
 
 - Stores customer messages with the original text (`titleCustomerLanguage`,
@@ -420,6 +423,7 @@ and Kubernetes or Kyma. There is no Helm chart.
 | `srv/code/genai/orchestration.js` | Prompt and client for the SAP AI orchestration service |
 | `srv/external/` | Imported S/4HANA service order OData V2 service; `data/` holds the mock data for development and tests |
 | `test/` | Jest tests (`*.test.js`), `setup.js` and the sample data in `test/data` |
+| `docs/features.md`, `test/docs/` | Map of the CAP features to files, commands and tests, and the tests of the generated API documents and of the map |
 | `xs-security.json` | XSUAA scopes, role templates and role collections |
 | `mta.yaml`, `Dockerfile`, `.dockerignore`, `test/deploy/` | Cloud Foundry deployment descriptor (MTA), container image of the server and their consistency tests |
 | `eslint.config.mjs` | Lint configuration |
