@@ -34,6 +34,17 @@ type MessageSentiment : String(20) enum
 }
 
 /**
+ * Processing status of a customer message. It is set by the action
+ * markAsResolved of the OperationsService, not edited directly.
+ */
+@assert.range
+type MessageStatus : String(20) enum
+{
+    Open;
+    Resolved;
+}
+
+/**
  * Code list with the localized names of the message categories. The codes are
  * the values of MessageCategory; the texts live in db/data (*.csv, *.texts.csv).
  */
@@ -66,6 +77,18 @@ entity CustomerMessages : cuid, managed
     suggestedResponseEnglish : String(1000);
     suggestedResponseCustomerLanguage : String(1000);
     S4HCP_ServiceOrder : Association to one S4HCP_ServiceOrder_Odata.A_ServiceOrder;
+    @readonly
+    @title : '{i18n>Status}'
+    status : MessageStatus default 'Open';
+    @readonly
+    @title : '{i18n>ResolvedAt}'
+    resolvedAt : Timestamp;
+    @readonly
+    @title : '{i18n>ResolvedBy}'
+    resolvedBy : String(255);
+    @readonly
+    @title : '{i18n>Resolution}'
+    resolution : String(1000);
     category : Association to one MessageCategories
         on category.code = messageCategory
         @title : '{i18n>Category}';
