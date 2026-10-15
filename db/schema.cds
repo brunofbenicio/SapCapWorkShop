@@ -187,6 +187,22 @@ entity ResponseTemplates : temporal, managed
         @mandatory;
 }
 
+/**
+ * Application-wide options. The table holds exactly one row (ID 1), which is
+ * delivered with the initial data in db/data and exposed as an OData singleton.
+ */
+@title : '{i18n>Settings}'
+entity Settings : managed
+{
+    key ID : Integer default 1;
+    /** Enrich customer messages with GenAI when they are read. */
+    @title : '{i18n>AutoEnrichment}'
+    autoEnrichment : Boolean default true;
+    /** Name of the AI model; if empty, the model from the configuration is used. */
+    @title : '{i18n>AiModelName}'
+    aiModelName : String(100);
+}
+
 annotate CustomerMessageTags with @assert.unique :
 {
     messageTag : [ message, tag ],

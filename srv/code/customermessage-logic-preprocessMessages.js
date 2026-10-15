@@ -6,6 +6,7 @@ const mapLimit = require('./util/map-limit');
 const LOG = cds.log('GenAI');
 
 const ENTITY = 'Benicio_1_04.CustomerMessages';
+const SETTINGS = 'Benicio_1_04.Settings';
 
 // Maximum number of AI calls running at the same time for one request.
 // Can be changed with `cds.genai.concurrency`.
@@ -43,11 +44,20 @@ function toEnumValue(field, value) {
 	return enumValues(field).find(allowed => allowed.toLowerCase() === wanted);
 }
 
-async function enrichCustomerMessage({ ID, titleCustomerLanguage, fullMessageCustomerLanguage }) {
+// Reads the application settings (singleton). Without a settings row the defaults apply.
+async function readSettings() {
+	const row = await SELECT.one.from(SETTINGS).columns('autoEnrichment', 'aiModelName');
+	return {
+		autoEnrichment: row?.autoEnrichment !== false,
+		modelName: row?.aiModelName || undefined
+	};
+}
+
+async function enrichCustomerMessage({ ID, titleCustomerLanguage, fullMessageCustomerLanguage }, { modelName }) {
 	let result;
 	try {
 		// Preprocess the customer message using an external service
-		result = await preprocessCustomerMessage(titleCustomerLanguage, fullMessageCustomerLanguage);
+		result = await preprocessCustomerMessage(titleCustomerLanguage, fullMessageCustomerLanguage, { modelName });
 	} catch (error) {
 		LOG.error(`Error from completion service for CustomerMessage ID ${ID}: ${error.message}`);
 		return;  // Skip this message and proceed to the next
@@ -79,8 +89,13 @@ async function enrichCustomerMessage({ ID, titleCustomerLanguage, fullMessageCus
 }
 
 module.exports = async function(request) {
-	let customerMessages;
+	let settings, customerMessages;
 	try {
+		settings = await readSettings();
+		if (!settings.autoEnrichment) {
+			LOG.debug('Automatic enrichment is switched off in the settings');
+			return;
+		}
 		// Fetch only the customer messages that still miss AI-derived fields. No row locks are taken.
 		customerMessages = await SELECT
 			.from(ENTITY)
@@ -95,5 +110,5 @@ module.exports = async function(request) {
 
 	// Process the customer messages with a bounded number of parallel AI calls
 	const concurrency = cds.env.genai?.concurrency ?? DEFAULT_CONCURRENCY;
-	await mapLimit(customerMessages, concurrency, enrichCustomerMessage);
+	await mapLimit(customerMessages, concurrency, customerMessage => enrichCustomerMessage(customerMessage, settings));
 }

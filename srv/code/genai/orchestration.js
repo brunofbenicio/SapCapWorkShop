@@ -29,17 +29,21 @@ function parseModelParamsFromEnv() {
 /**
  * Resolves the LLM configuration for the orchestration service.
  *
- * Precedence (highest first):
- *   1. environment variables GENAI_MODEL_NAME / GENAI_MODEL_PARAMS (JSON)
- *   2. cds.env: `cds.genai.model` and `cds.genai.modelParams`
- *   3. built-in defaults
+ * Precedence for the model name (highest first):
+ *   1. `options.modelName`, for example from the application settings
+ *   2. environment variable GENAI_MODEL_NAME
+ *   3. cds.env: `cds.genai.model`
+ *   4. built-in default
+ * The model parameters come from GENAI_MODEL_PARAMS (JSON), `cds.genai.modelParams`
+ * and the built-in defaults, in this order.
  *
+ * @param {{ modelName?: string }} [options]
  * @returns {{ model_name: string, model_params: object }}
  */
-function getLlmConfig() {
+function getLlmConfig({ modelName } = {}) {
     const settings = cds.env.genai || {};
     return {
-        model_name: process.env.GENAI_MODEL_NAME || settings.model || DEFAULT_MODEL_NAME,
+        model_name: modelName || process.env.GENAI_MODEL_NAME || settings.model || DEFAULT_MODEL_NAME,
         model_params: {
             ...DEFAULT_MODEL_PARAMS,
             ...settings.modelParams,
@@ -52,9 +56,9 @@ function getLlmConfig() {
  * Creates an orchestration client for a single prompt template.
  * The template may contain `{{?name}}` placeholders that are filled via `inputParams`.
  */
-function createOrchestrationClient(prompt) {
+function createOrchestrationClient(prompt, options) {
     return new OrchestrationClient({
-        llm: getLlmConfig(),
+        llm: getLlmConfig(options),
         templating: { template: [{ role: 'user', content: prompt }] }
     });
 }
@@ -75,10 +79,10 @@ function parseModelJson(content) {
 }
 
 // Preprocess customer message by categorizing, translating, and summarizing.
-// Takes title and full message in customer's language.
+// Takes title and full message in customer's language and optionally the model name to use.
 // Returns structured JSON with translated title and message, summaries, categories, urgency, and sentiment.
 
-async function preprocessCustomerMessage(titleCustomerLanguage, fullMessageCustomerLanguage) {
+async function preprocessCustomerMessage(titleCustomerLanguage, fullMessageCustomerLanguage, options = {}) {
     const prompt = `
     Categorize the fullMessageCustomerLanguage into one of (Technical, Delivery, Service).
     Classify urgency of the fullMessageCustomerLanguage into one of (High, Medium, Low).
@@ -102,7 +106,7 @@ async function preprocessCustomerMessage(titleCustomerLanguage, fullMessageCusto
     }`;
 
     try {
-        const orchestrationClient = createOrchestrationClient(prompt);
+        const orchestrationClient = createOrchestrationClient(prompt, options);
         const response = await orchestrationClient.chatCompletion({
             inputParams: {
                 titleCustomerLanguage: String(titleCustomerLanguage ?? ''),
