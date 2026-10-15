@@ -1,6 +1,11 @@
 const cds = require('@sap/cds');
 const { benicio_1_04Srv } = require('../service');
 
+const LOG = cds.log('service-orders');
+
+// The remote service with the service orders of SAP S/4HANA, see cds.requires in package.json.
+const SERVICE_ORDER_SERVICE = 'S4HCP_ServiceOrder_Odata';
+
 const MAX_ATTACHMENT_MB = 5;
 const ALLOWED_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'application/pdf', 'text/plain'];
 
@@ -11,10 +16,26 @@ const ALLOWED_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'applicatio
  */
 module.exports = class CustomerMessagesService extends benicio_1_04Srv {
 	async init() {
+		this.on('READ', 'A_ServiceOrder', req => this.readServiceOrders(req));
 		this.before('*', req => this.checkGraphQLReadOnly(req));
 		this.before('SAVE', 'CustomerMessages', req => this.checkMessage(req));
 		this.before(['NEW', 'UPDATE'], 'CustomerMessageAttachments.drafts', req => this.checkUpload(req));
 		return super.init();
+	}
+
+	// The service orders are not stored here: reads are passed on to the S/4HANA service (a destination in
+	// production, a local mock with the data of srv/external/data in development and tests).
+	async readServiceOrders(req) {
+		try {
+			const remote = await cds.connect.to(SERVICE_ORDER_SERVICE);
+			return await remote.run(req.query);
+		} catch (error) {
+			// A wrong request (4xx) is the caller's problem, everything else means the remote system is not available.
+			const status = error.status ?? error.statusCode;
+			if (status >= 400 && status < 500) throw error;
+			LOG.error(`Reading the service orders failed: ${error.message}`);
+			return req.reject(502, 'SERVICE_ORDERS_UNAVAILABLE');
+		}
 	}
 
 	// Messages are created and changed in drafts, which the GraphQL adapter cannot activate (it has no

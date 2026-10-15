@@ -52,6 +52,11 @@ GET {{host}}/service/benicio_1_04/MessageCategories
 Authorization: Basic viewer viewer
 Accept-Language: de
 
+### Service orders of SAP S/4HANA (the value help of a message); `npm run cds-watch` serves a local mock of the system
+# expect: 200
+GET {{host}}/service/benicio_1_04/A_ServiceOrder?$search=freezer&$orderby=ServiceOrder&$top=3
+Authorization: Basic viewer viewer
+
 ### A viewer may not create a message
 # expect: 403
 POST {{host}}/service/benicio_1_04/CustomerMessages
