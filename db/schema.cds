@@ -58,7 +58,8 @@ entity MessageCategories : CodeList
 entity CustomerMessages : cuid, managed
 {
     customerMessageID : Integer
-        @mandatory;
+        @mandatory
+        @assert.range : [ 1, 999999999 ];
     titleEnglish : String(100);
     customerName : String(100);
     productName : String(100);
@@ -67,8 +68,12 @@ entity CustomerMessages : cuid, managed
     messageUrgency : MessageUrgency;
     messageSentiment : MessageSentiment;
     titleCustomerLanguage : String(100);
-    customerId : String(50);
-    productId : String(50);
+    customerId : String(50)
+        @assert.format : '^[A-Za-z0-9][A-Za-z0-9._-]*$'
+        @assert.format.message : 'ID_FORMAT';
+    productId : String(50)
+        @assert.format : '^[A-Za-z0-9][A-Za-z0-9._-]*$'
+        @assert.format.message : 'ID_FORMAT';
     summaryCustomerLanguage : String(500);
     originatingCountry : String(100);
     sourceLanguage : String(10);
@@ -172,7 +177,9 @@ entity CustomerMessageAttachments : cuid, managed
 @title : '{i18n>Tags}'
 entity Tags : managed
 {
-    key code : String(40);
+    key code : String(40)
+        @assert.format : '^[a-z0-9]+(-[a-z0-9]+)*$'
+        @assert.format.message : 'SLUG_FORMAT';
     title : String(100)
         @mandatory;
     messages : Association to many CustomerMessageTags
@@ -188,7 +195,8 @@ entity CustomerMessageTags : cuid
 {
     message : Association to one CustomerMessages;
     tag : Association to one Tags
-        @mandatory;
+        @mandatory
+        @assert.target;
 }
 
 /**
@@ -199,7 +207,9 @@ entity CustomerMessageTags : cuid
 @title : '{i18n>ResponseTemplates}'
 entity ResponseTemplates : temporal, managed
 {
-    key code : String(40);
+    key code : String(40)
+        @assert.format : '^[a-z0-9]+(-[a-z0-9]+)*$'
+        @assert.format.message : 'SLUG_FORMAT';
     // Without an explicit period a version is valid from now on and without end.
     validFrom : Timestamp default $now @cds.valid.from;
     validTo : Timestamp default '9999-12-31T23:59:59.999Z' @cds.valid.to;
@@ -223,7 +233,9 @@ entity Settings : managed
     autoEnrichment : Boolean default true;
     /** Name of the AI model; if empty, the model from the configuration is used. */
     @title : '{i18n>AiModelName}'
-    aiModelName : String(100);
+    aiModelName : String(100)
+        @assert.format : '^[A-Za-z0-9][A-Za-z0-9._-]*$'
+        @assert.format.message : 'MODEL_NAME_FORMAT';
 }
 
 annotate CustomerMessageTags with @assert.unique :

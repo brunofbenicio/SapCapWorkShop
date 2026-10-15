@@ -25,8 +25,10 @@ module.exports = class OperationsService extends cds.ApplicationService {
 	async resolveMessage(req) {
 		const { SELECT, UPDATE } = cds.ql;
 		const message = await this.run(SELECT.one.from(req.subject).columns('ID', 'customerMessageID', 'status'));
-		if (!message) return req.reject(404, 'The customer message does not exist');
-		if (message.status === 'Resolved') return req.reject(409, 'The customer message is already resolved');
+		if (!message) return req.reject({ status: 404, message: 'MESSAGE_NOT_FOUND' });
+		if (message.status === 'Resolved') {
+			return req.reject({ status: 409, message: 'MESSAGE_ALREADY_RESOLVED', args: [message.customerMessageID] });
+		}
 
 		// The status fields are read-only for clients, so they are written on the database directly.
 		const { CustomerMessages } = cds.entities('Benicio_1_04');
@@ -46,13 +48,15 @@ module.exports = class OperationsService extends cds.ApplicationService {
 			resolution: resolved.resolution
 		});
 
+		req.info({ message: 'MESSAGE_RESOLVED', args: [message.customerMessageID] });
 		return this.run(SELECT.one.from(req.subject));
 	}
 
 	async createReply(req) {
 		const { SELECT, INSERT } = cds.ql;
-		const message = await this.run(SELECT.one.from(req.subject).columns('ID', 'customerMessageID'));
-		if (!message) return req.reject(404, 'The customer message does not exist');
+		const message = await this.run(SELECT.one.from(req.subject).columns('ID', 'customerMessageID', 'status'));
+		if (!message) return req.reject({ status: 404, message: 'MESSAGE_NOT_FOUND' });
+		if (message.status === 'Resolved') req.warn({ message: 'REPLY_TO_RESOLVED_MESSAGE', args: [message.customerMessageID] });
 
 		const { CustomerMessageReplies } = cds.entities('Benicio_1_04');
 		const { author, text } = req.data;
@@ -74,7 +78,7 @@ module.exports = class OperationsService extends cds.ApplicationService {
 	async suggestPriority(req) {
 		const { SELECT } = cds.ql;
 		const message = await this.run(SELECT.one.from(req.subject).columns('priorityScore'));
-		if (!message) return req.reject(404, 'The customer message does not exist');
+		if (!message) return req.reject({ status: 404, message: 'MESSAGE_NOT_FOUND' });
 		return { score: message.priorityScore, level: priorityLevel(message.priorityScore) };
 	}
 

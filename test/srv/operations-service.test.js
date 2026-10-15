@@ -81,7 +81,7 @@ describe('OperationsService', () => {
             const { status, data } = await markAsResolved(POSITIVE_FEEDBACK, { resolution: 'Again' });
 
             expect(status).toBe(409);
-            expect(data.error.message).toBe('The customer message is already resolved');
+            expect(data.error).toMatchObject({ code: 'MESSAGE_ALREADY_RESOLVED', message: 'Customer message 2302 is already resolved.' });
             expect(await readRow(POSITIVE_FEEDBACK)).toMatchObject({
                 resolvedAt: before.resolvedAt,
                 resolution: before.resolution
