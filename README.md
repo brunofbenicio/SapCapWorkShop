@@ -293,7 +293,7 @@ curl -u yves: -X PUT http://localhost:4004/-/cds/saas-provisioning/tenant/t1 \
 
 `test/srv/multitenancy.test.js` checks the configuration, `cds compile` and `cds build` with the profile
 and runs the application with SQLite: two tenants, isolated data, extension, feature, unsubscribing.
-**Not done and not verified (no BTP access):** the deployment (there is no `mta.yaml` for it), the SAP
+**Not done and not verified (no BTP access):** the deployment (`mta.yaml` is for the single-tenant profile), the SAP
 HANA container per tenant (SAP Service Manager), the SaaS Provisioning service
 (`saas-registry`) and its XSUAA setup: `xs-security.json` would need `"tenant-mode": "shared"`, the
 scope `$XSAPPNAME.mtcallback` (granted to `sap-provisioning`) and the scope `$XSAPPNAME.cds.ExtensionDeveloper`.
@@ -332,7 +332,34 @@ server with the mocked S/4HANA service (`test/helpers/server.js`), so they need 
 - In production the events are delivered in-process only. To exchange events with other
   applications, bind SAP Event Mesh and set `cds.requires.messaging.kind` to
   `enterprise-messaging` for the `production` profile.
-- A deployment descriptor (for example `mta.yaml`) is not part of the repository yet.
+- `mta.yaml` deploys the application to Cloud Foundry, see the next section.
+
+## Deploy to Cloud Foundry
+
+`mta.yaml` is the deployment descriptor for SAP BTP, Cloud Foundry environment, for the single-tenant
+`production` profile. It has two modules, the CAP server (`gen/srv`, health check `/health`) and the
+database deployer (`gen/db`), and these services:
+
+| Service (plan) | Purpose |
+|----------------|---------|
+| `hana` (`hdi-shared`) | HDI container with the tables; needs an SAP HANA Cloud instance mapped to the space |
+| `xsuaa` (`application`) | Created from `xs-security.json`; assign the role collections `CustomerMessages_*` to the users |
+| `destination` (`lite`) | Holds the destination `S4HCP-ServiceOrder-Odata`; create it after the deployment, its URL and credentials belong to your S/4HANA Cloud system |
+| `application-logs` (`standard`) | Application logs |
+| `auditlog` (`premium`) | Audit log of `@cap-js/audit-logging` |
+
+```sh
+npm install -g mbt     # Cloud MTA Build Tool
+mbt build              # runs npm ci and cds build --production, writes mta_archives/Benicio_1_04_1.0.0.mtar
+cf deploy mta_archives/Benicio_1_04_1.0.0.mtar
+```
+
+For real AI results bind an SAP AI Core instance to the server module (see the comment in `mta.yaml`).
+The descriptor has no UI module and no approuter: the Fiori app is not deployed, and the APIs are
+called with a token of the XSUAA instance. `test/deploy/mta.test.js` checks that the descriptor agrees
+with `package.json`, `xs-security.json` and the output of `cds build --production`, and `mbt build` created
+the archive locally. **Not verified (no BTP access):** `cf deploy`, the service plans (for example the
+plan of the audit log service) and the running application on Cloud Foundry.
 
 ## Repository layout
 
@@ -370,5 +397,6 @@ server with the mocked S/4HANA service (`test/helpers/server.js`), so they need 
 | `srv/external/` | Imported S/4HANA service order OData V2 service; `data/` holds the mock data for development and tests |
 | `test/` | Jest tests (`*.test.js`), `setup.js` and the sample data in `test/data` |
 | `xs-security.json` | XSUAA scopes, role templates and role collections |
+| `mta.yaml`, `test/deploy/` | Cloud Foundry deployment descriptor (MTA) and its consistency test |
 | `eslint.config.mjs` | Lint configuration |
 | `package.json` | Dependencies, scripts and the `cds` configuration |
