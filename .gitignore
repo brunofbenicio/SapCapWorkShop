@@ -43,3 +43,6 @@ env/
 
 # Local file-based messaging box (development)
 .cds-msg-box*
+
+# Generated OpenAPI documents (npm run openapi)
+docs/openapi/
