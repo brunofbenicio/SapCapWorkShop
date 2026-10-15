@@ -22,6 +22,10 @@ Fiori elements UI.
 - Keeps the replies sent to a customer (`CustomerMessageReplies`: author, text, sent time) as
   a composition of the message. Replies are edited in the message's draft, are saved with
   it and are deleted with it.
+- Stores files attached to a message (`CustomerMessageAttachments`, for example a photo of
+  the defect). Content is uploaded and downloaded as a stream
+  (`.../attachments(ID=...,IsActiveEntity=true)/content`); downloads are served with
+  `Content-Disposition: attachment`.
 - Offers the message categories as a code list (`MessageCategories`) with texts in English,
   German and Portuguese. The language is taken from the `Accept-Language` header or the
   `sap-locale` URL parameter; other languages fall back to English. Labels of the model
@@ -117,7 +121,7 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | Path | Purpose |
 |------|---------|
 | `app/` | Fiori elements app `benicio_1_04.myapplication`, UI annotations and launchpad preview |
-| `db/schema.cds` | Domain model: entities `CustomerMessages`, `CustomerMessageReplies` and `MessageCategories` |
+| `db/schema.cds` | Domain model: entities `CustomerMessages`, `CustomerMessageReplies`, `CustomerMessageAttachments` and `MessageCategories` |
 | `db/data` | Reference data deployed everywhere: texts of the message categories |
 | `db/i18n` | Translated labels of the model (English default, `_de`, `_pt`) |
 | `db/src`, `db/undeploy.json` | HDI deployment configuration for HANA |
