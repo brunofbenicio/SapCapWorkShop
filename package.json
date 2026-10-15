@@ -135,6 +135,17 @@
         "enabled": false
       }
     },
+    "server": {
+      "cors": false
+    },
+    "cors": {
+      "origins": [],
+      "[development]": {
+        "origins": [
+          "*"
+        ]
+      }
+    },
     "protocols": {
       "graphql": {
         "[production]": {

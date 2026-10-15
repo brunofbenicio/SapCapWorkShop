@@ -8,6 +8,10 @@
 
 @host = http://localhost:4004
 
+### The health check of the platform is public: UP, or 503 DOWN when the database does not answer
+# expect: 200
+GET {{host}}/health
+
 ### No credentials
 # expect: 401
 GET {{host}}/service/benicio_1_04/CustomerMessages
