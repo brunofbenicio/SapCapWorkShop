@@ -16,6 +16,9 @@ Fiori elements UI.
   the AI answer is checked against them.
 - Records `createdAt`, `createdBy`, `modifiedAt` and `modifiedBy` for every message
   (`managed` aspect).
+- Derives two read-only fields: `priorityScore` (calculated on read from urgency, High 3 /
+  Medium 2 / Low 1, and sentiment, Negative 2 / Neutral 1 / Positive 0) and `displayTitle`
+  (English title if available, otherwise the original title; stored in the database).
 - Offers the message categories as a code list (`MessageCategories`) with texts in English,
   German and Portuguese. The language is taken from the `Accept-Language` header or the
   `sap-locale` URL parameter; other languages fall back to English. Labels of the model
