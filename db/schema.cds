@@ -2,7 +2,7 @@ namespace Benicio_1_04;
 
 using { S4HCP_ServiceOrder_Odata } from '../srv/external/S4HCP_ServiceOrder_Odata.cds';
 
-using { cuid, managed } from '@sap/cds/common';
+using { cuid, managed, sap.common.CodeList } from '@sap/cds/common';
 
 /**
  * Values of the AI-derived classification fields. The GenAI prompt in
@@ -33,6 +33,17 @@ type MessageSentiment : String(20) enum
     Neutral;
 }
 
+/**
+ * Code list with the localized names of the message categories. The codes are
+ * the values of MessageCategory; the texts live in db/data (*.csv, *.texts.csv).
+ */
+@title : '{i18n>MessageCategories}'
+entity MessageCategories : CodeList
+{
+    key code : MessageCategory;
+}
+
+@title : '{i18n>CustomerMessages}'
 entity CustomerMessages : cuid, managed
 {
     customerMessageID : Integer
@@ -55,6 +66,9 @@ entity CustomerMessages : cuid, managed
     suggestedResponseEnglish : String(1000);
     suggestedResponseCustomerLanguage : String(1000);
     S4HCP_ServiceOrder : Association to one S4HCP_ServiceOrder_Odata.A_ServiceOrder;
+    category : Association to one MessageCategories
+        on category.code = messageCategory
+        @title : '{i18n>Category}';
 }
 
 annotate CustomerMessages with @assert.unique :
