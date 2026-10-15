@@ -15,7 +15,7 @@ jest.mock('@sap-ai-sdk/orchestration', () => ({
     }
 }));
 
-const { preprocessCustomerMassage, getLlmConfig } = require('../../srv/code/genai/orchestration');
+const { preprocessCustomerMessage, getLlmConfig } = require('../../srv/code/genai/orchestration');
 
 const LOG = cds.log('GenAI');
 
@@ -47,11 +47,11 @@ describe('GenAI orchestration', () => {
         jest.restoreAllMocks();
     });
 
-    describe('preprocessCustomerMassage', () => {
+    describe('preprocessCustomerMessage', () => {
         it('sends the prompt template and input params and returns the parsed JSON', async () => {
             respondWith(JSON.stringify(MODEL_RESULT));
 
-            const result = await preprocessCustomerMassage('Compresseur défectueux', 'Le compresseur ne marche plus.');
+            const result = await preprocessCustomerMessage('Compresseur défectueux', 'Le compresseur ne marche plus.');
 
             expect(result).toEqual(MODEL_RESULT);
             expect(mockChatCompletion).toHaveBeenCalledWith({
@@ -72,13 +72,13 @@ describe('GenAI orchestration', () => {
         it('accepts JSON wrapped in a markdown code fence', async () => {
             respondWith('```json\n' + JSON.stringify(MODEL_RESULT) + '\n```');
 
-            await expect(preprocessCustomerMassage('t', 'm')).resolves.toEqual(MODEL_RESULT);
+            await expect(preprocessCustomerMessage('t', 'm')).resolves.toEqual(MODEL_RESULT);
         });
 
         it('replaces missing inputs by empty strings', async () => {
             respondWith(JSON.stringify(MODEL_RESULT));
 
-            await preprocessCustomerMassage(undefined, null);
+            await preprocessCustomerMessage(undefined, null);
 
             expect(mockChatCompletion).toHaveBeenCalledWith({
                 inputParams: { titleCustomerLanguage: '', fullMessageCustomerLanguage: '' }
@@ -88,21 +88,21 @@ describe('GenAI orchestration', () => {
         it('fails with a stable error when the model does not return JSON', async () => {
             respondWith('Sorry, I cannot help with that.');
 
-            await expect(preprocessCustomerMassage('t', 'm')).rejects.toThrow('Preprocessing service failed.');
+            await expect(preprocessCustomerMessage('t', 'm')).rejects.toThrow('Preprocessing service failed.');
             expect(LOG.error).toHaveBeenCalled();
         });
 
         it('fails with a stable error when the model returns nothing', async () => {
             respondWith(undefined);
 
-            await expect(preprocessCustomerMassage('t', 'm')).rejects.toThrow('Preprocessing service failed.');
+            await expect(preprocessCustomerMessage('t', 'm')).rejects.toThrow('Preprocessing service failed.');
         });
 
         it('fails with a stable error and keeps the cause when the SDK call fails', async () => {
             const failure = new Error('connect ECONNREFUSED');
             mockChatCompletion.mockRejectedValue(failure);
 
-            const error = await preprocessCustomerMassage('t', 'm').catch(e => e);
+            const error = await preprocessCustomerMessage('t', 'm').catch(e => e);
 
             expect(error.message).toBe('Preprocessing service failed.');
             expect(error.cause).toBe(failure);
