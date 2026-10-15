@@ -121,6 +121,11 @@ Fiori elements UI.
   header and the table (`markAsResolved` also in `benicio_1_04Srv`, role Agent, offered for saved open
   messages). The annotations build on the ones SAP Build Code generated and replace those of the same
   targets. A test looks at them in the `$metadata`; the UI itself was not run in a browser.
+- Translates the UI: labels, titles of facets and columns and the action text of the Fiori annotations
+  are `{i18n>Key}` keys. The texts of the UI are in `app/_i18n` (English, German, Portuguese), the ones
+  of the model in `db/i18n`. The service delivers the `$metadata` in the language of the request
+  (`Accept-Language` or `sap-locale`); other languages get English. The texts of the UI5 app itself
+  (`webapp/i18n`, title of the app) are not translated.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
@@ -322,7 +327,7 @@ server with the mocked S/4HANA service (`test/helpers/server.js`), so they need 
 | `app/` | Fiori elements app `benicio_1_04.myapplication`, UI annotations (`customer-messages-ui.cds` is the file to edit, the others are generated) and launchpad preview |
 | `db/schema.cds` | Domain model: entities `CustomerMessages`, `CustomerMessageReplies`, `CustomerMessageAttachments`, `Tags`, `CustomerMessageTags`, `ResponseTemplates`, `Settings` and `MessageCategories` |
 | `db/data` | Reference data deployed everywhere: texts of the message categories and the initial settings row |
-| `db/i18n` | Translated labels of the model (English default, `_de`, `_pt`) |
+| `db/i18n`, `app/_i18n` | Translated labels of the model and of the Fiori UI (English default, `_de`, `_pt`) |
 | `db/src`, `db/undeploy.json` | HDI deployment configuration for HANA |
 | `srv/service.cds` | Service `benicio_1_04Srv` (draft-enabled, requires an authenticated user) |
 | `srv/admin-service.cds` | `AdminService` for tags, response templates and settings, with its restrictions |
