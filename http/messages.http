@@ -156,6 +156,24 @@ Content-Type: application/json
 
 {}
 
+### Resolve the saved message (bound action, the same as in the work queue); a viewer is refused with 403
+# expect: 200
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=true)/benicio_1_04Srv.markAsResolved
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "resolution": "Drain pump replaced"
+}
+
+### Resolving it again fails with 409
+# expect: 409
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=true)/benicio_1_04Srv.markAsResolved
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{}
+
 ### A viewer may not delete the message (agents delete only their own messages, administrators any)
 # expect: 403
 DELETE {{host}}/service/benicio_1_04/CustomerMessages(ID=a0000000-0000-4000-8000-000000000001,IsActiveEntity=true)
