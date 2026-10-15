@@ -1,3 +1,4 @@
+const path = require('path');
 const cds = require('@sap/cds');
 
 // The SAP AI SDK is mocked: no network access or AI Core binding is needed.
@@ -107,6 +108,24 @@ describe('GenAI orchestration', () => {
             expect(error.message).toBe('Preprocessing service failed.');
             expect(error.cause).toBe(failure);
             expect(LOG.error).toHaveBeenCalled();
+        });
+    });
+
+    describe('prompt', () => {
+        // The prompt must offer exactly the values that db/schema.cds allows.
+        it.each([
+            ['messageCategory', 'MessageCategory'],
+            ['messageUrgency', 'MessageUrgency'],
+            ['messageSentiment', 'MessageSentiment']
+        ])('lists the values of the enum type of %s', async (_, type) => {
+            respondWith(JSON.stringify(MODEL_RESULT));
+            const model = await cds.load(path.join(__dirname, '../../db/schema.cds'));
+            const values = Object.keys(model.definitions[`Benicio_1_04.${type}`].enum);
+
+            await preprocessCustomerMessage('t', 'm');
+
+            const [config] = mockConstructor.mock.calls[0];
+            expect(config.templating.template[0].content).toContain(`(${values.join(', ')})`);
         });
     });
 

@@ -22,10 +22,26 @@ const AI_FIELDS = [
 	'messageSentiment'
 ];
 
+// AI fields that must contain one of the values of the enum type in db/schema.cds.
+const ENUM_FIELDS = ['messageCategory', 'messageUrgency', 'messageSentiment'];
+
 // A message needs preprocessing if it has a text to work on and at least one AI field is empty.
 const NEEDS_PREPROCESSING = `fullMessageCustomerLanguage is not null and fullMessageCustomerLanguage != '' and (${
 	AI_FIELDS.map(field => `${field} is null or ${field} = ''`).join(' or ')
 })`;
+
+// Allowed values of an enum-typed field, taken from the model so there is a single source of truth.
+function enumValues(field) {
+	const { CustomerMessages } = cds.entities('Benicio_1_04');
+	return Object.entries(CustomerMessages.elements[field].enum).map(([name, definition]) => definition.val ?? name);
+}
+
+// Maps the answer of the model to the allowed value, ignoring case and surrounding blanks.
+function toEnumValue(field, value) {
+	if (typeof value !== 'string') return undefined;
+	const wanted = value.trim().toLowerCase();
+	return enumValues(field).find(allowed => allowed.toLowerCase() === wanted);
+}
 
 async function enrichCustomerMessage({ ID, titleCustomerLanguage, fullMessageCustomerLanguage }) {
 	let result;
@@ -42,6 +58,15 @@ async function enrichCustomerMessage({ ID, titleCustomerLanguage, fullMessageCus
 	if (AI_FIELDS.some(field => !data[field])) {
 		LOG.error(`Incomplete response from completion service for CustomerMessage ID ${ID}`);
 		return;  // Skip this message and proceed to the next
+	}
+
+	for (const field of ENUM_FIELDS) {
+		const value = toEnumValue(field, data[field]);
+		if (!value) {
+			LOG.error(`Invalid ${field} ${JSON.stringify(data[field])} from completion service for CustomerMessage ID ${ID}`);
+			return;  // Skip this message and proceed to the next
+		}
+		data[field] = value;
 	}
 
 	try {

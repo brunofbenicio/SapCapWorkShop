@@ -149,6 +149,40 @@ describe('before READ enrichment of CustomerMessages', () => {
         expect(LOG.error).toHaveBeenCalledWith(expect.stringContaining('Incomplete response'));
     });
 
+    it('stores the allowed enum values when the model differs in case or blanks', async () => {
+        await insert(incomplete(1));
+        preprocessCustomerMessage.mockResolvedValue({
+            ...AI_RESULT,
+            messageCategory: ' technical ',
+            messageUrgency: 'HIGH',
+            messageSentiment: 'negative'
+        });
+
+        await GET(URL);
+
+        expect(await readRow(1)).toMatchObject({
+            messageCategory: 'Technical',
+            messageUrgency: 'High',
+            messageSentiment: 'Negative'
+        });
+    });
+
+    it.each([
+        ['messageCategory', 'Billing'],
+        ['messageUrgency', 'Critical'],
+        ['messageSentiment', 'Angry'],
+        ['messageSentiment', 42]
+    ])('keeps the message unchanged when %s is not an allowed value (%p)', async (field, value) => {
+        await insert(incomplete(1));
+        preprocessCustomerMessage.mockResolvedValue({ ...AI_RESULT, [field]: value });
+
+        const { status } = await GET(URL);
+
+        expect(status).toBe(200);
+        expect(await readRow(1)).toMatchObject({ titleEnglish: null, [field]: null });
+        expect(LOG.error).toHaveBeenCalledWith(expect.stringContaining(`Invalid ${field}`));
+    });
+
     it('limits the number of parallel AI calls', async () => {
         cds.env.genai = { concurrency: 2 };
         await insert(...[1, 2, 3, 4, 5].map(n => incomplete(n)));
