@@ -96,7 +96,11 @@ Fiori elements UI.
   `sap-locale` URL parameter; other languages fall back to English. Labels of the model
   come from `db/i18n`.
 - Lets users create and edit messages in a draft before saving them (draft-enabled entity).
-- Links a message to a service order of an SAP S/4HANA system (external OData V2 service).
+- Links a message to a service order of an SAP S/4HANA system (external OData V2 service). The
+  entity `A_ServiceOrder` (the value help of that field) holds no data: reads are passed on to the
+  remote service, in production through the destination `S4HCP-ServiceOrder-Odata`. In development
+  and tests a local mock serves the orders in `srv/external/data` (8 sample service orders), so no
+  network is needed; if the remote system cannot be reached, the service answers `502`.
 - Enriches messages automatically the first time they are read (see below).
 
 ## Architecture
@@ -141,8 +145,10 @@ npm run cds-watch      # cds watch --open, serves on http://localhost:4004
 ```
 
 In development the app uses an in-memory SQLite database that is filled from `test/data`,
-mocked authentication with the users below (HTTP basic auth) and, with `cds watch`, a local
-mock of the S/4HANA service.
+mocked authentication with the users below (HTTP basic auth) and, with `cds watch` (or
+`cds-serve --with-mocks`), a local mock of the S/4HANA service filled from `srv/external/data`.
+Without the mock (`npm start`), reading `A_ServiceOrder` answers `502`, because there is no
+destination.
 
 | User | Password | Roles | May |
 |------|----------|-------|-----|
@@ -191,7 +197,8 @@ npm test        # jest + @cap-js/cds-test, in-memory SQLite, AI SDK mocked
 npm run lint    # eslint with the CAP and CDS rules
 ```
 
-The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test.
+The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test. They start the
+server with the mocked S/4HANA service (`test/helpers/server.js`), so they need no network either.
 
 ## Profiles and production
 
@@ -199,7 +206,7 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 |--|--|--|
 | Database | SQLite in memory | SAP HANA (`@cap-js/hana`) |
 | Authentication | `mocked` (users `viewer`, `agent`, `admin`) | `xsuaa` (see `xs-security.json`) |
-| S/4HANA service | local mock (`cds watch`) | destination `S4HCP-ServiceOrder-Odata` |
+| S/4HANA service | local mock (`cds watch`, tests) | destination `S4HCP-ServiceOrder-Odata` |
 | Messaging | file-based (`.cds-msg-box`, git-ignored) | in-process (`local-messaging`) |
 | Initial data | `db/data` (code lists) and `test/data` (sample messages) | `db/data` only |
 
@@ -240,7 +247,7 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | `srv/code/customermessage-logic-preprocessMessages.js` | Handler that enriches incomplete messages |
 | `srv/code/genai/orchestration.js` | Prompt and client for the SAP AI orchestration service |
 | `srv/code/util/map-limit.js` | Helper to run async work with bounded concurrency |
-| `srv/external/` | Imported S/4HANA service order OData V2 service |
+| `srv/external/` | Imported S/4HANA service order OData V2 service; `data/` holds the mock data for development and tests |
 | `test/` | Jest tests (`*.test.js`), `setup.js` and the sample data in `test/data` |
 | `xs-security.json` | XSUAA scopes, role templates and role collections |
 | `eslint.config.mjs` | Lint configuration |

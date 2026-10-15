@@ -1,0 +1,9 @@
+ServiceOrder;ServiceOrderType;ServiceOrderDescription;ServiceDocumentPriority;ServiceOrderIsReleased;ServiceOrderIsCompleted;SoldToParty;TransactionCurrency;ServiceDocNetAmount
+4000001;SVO1;Replace freezer compressor;1;X;;1000101;EUR;389.000
+4000002;SVO1;Clean freezer drain;3;X;X;1000101;EUR;59.000
+4000003;SVO1;Replace freezer door seals;2;X;;1000102;EUR;74.500
+4000004;SVO1;Repair noisy freezer compressor;1;X;;1000103;EUR;412.000
+4000005;SVO2;Redeliver damaged dishwasher;2;X;;1000104;EUR;0.000
+4000006;SVO1;Repair washing machine spin cycle;2;;;1000105;EUR;148.000
+4000007;SVO2;Reschedule refrigerator delivery;3;X;X;1000106;EUR;0.000
+4000008;SVO1;Check oven heating element;2;X;;1000107;EUR;96.000
