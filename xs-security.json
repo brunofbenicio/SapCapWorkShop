@@ -1,6 +1,70 @@
 {
-  "scopes": [],
+  "xsappname": "benicio_1_04",
+  "tenant-mode": "dedicated",
+  "description": "Security profile of the Customer Messages application",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Viewer",
+      "description": "Read customer messages"
+    },
+    {
+      "name": "$XSAPPNAME.Agent",
+      "description": "Process customer messages and write replies"
+    },
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Administer customer messages and application settings"
+    }
+  ],
   "attributes": [],
-  "role-templates": [],
+  "role-templates": [
+    {
+      "name": "Viewer",
+      "description": "Read-only access to customer messages",
+      "scope-references": [
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "Agent",
+      "description": "Read and process customer messages",
+      "scope-references": [
+        "$XSAPPNAME.Viewer",
+        "$XSAPPNAME.Agent"
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Full access to customer messages and settings",
+      "scope-references": [
+        "$XSAPPNAME.Viewer",
+        "$XSAPPNAME.Agent",
+        "$XSAPPNAME.Admin"
+      ]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "CustomerMessages_Viewer",
+      "description": "Customer Messages - read-only access",
+      "role-template-references": [
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "CustomerMessages_Agent",
+      "description": "Customer Messages - process messages",
+      "role-template-references": [
+        "$XSAPPNAME.Agent"
+      ]
+    },
+    {
+      "name": "CustomerMessages_Admin",
+      "description": "Customer Messages - administration",
+      "role-template-references": [
+        "$XSAPPNAME.Admin"
+      ]
+    }
+  ],
   "authorities-inheritance": false
 }
