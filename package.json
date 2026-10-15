@@ -22,6 +22,7 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@cap-js/graphql": "^0.14.0",
     "@cap-js/hana": "^2",
     "@sap-ai-sdk/foundation-models": "^1.15.0",
     "@sap-ai-sdk/orchestration": "^1.15.0",
@@ -120,6 +121,13 @@
         },
         "csrf": true,
         "csrfInBatch": true
+      }
+    },
+    "protocols": {
+      "graphql": {
+        "[production]": {
+          "graphiql": false
+        }
       }
     }
   },
