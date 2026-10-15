@@ -11,13 +11,13 @@
     "genai",
     "sap-ai-sdk"
   ],
-  "homepage": "https://github.com/brunofbenicio/SapCapWorkShop#readme",
+  "homepage": "https://github.com/brunofbenicio/sap-cap-lab#readme",
   "bugs": {
-    "url": "https://github.com/brunofbenicio/SapCapWorkShop/issues"
+    "url": "https://github.com/brunofbenicio/sap-cap-lab/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/brunofbenicio/SapCapWorkShop.git"
+    "url": "https://github.com/brunofbenicio/sap-cap-lab.git"
   },
   "license": "UNLICENSED",
   "private": true,

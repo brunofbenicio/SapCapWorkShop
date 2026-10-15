@@ -34,7 +34,7 @@ RUN cd gen/srv && npm ci --omit=dev
 FROM node:${NODE_VERSION}-alpine AS runtime
 LABEL org.opencontainers.image.title="Customer Messages" \
       org.opencontainers.image.description="CAP server of the Customer Messages application" \
-      org.opencontainers.image.source="https://github.com/brunofbenicio/SapCapWorkShop"
+      org.opencontainers.image.source="https://github.com/brunofbenicio/sap-cap-lab"
 
 ENV NODE_ENV=production
 WORKDIR /app
