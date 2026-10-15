@@ -44,9 +44,13 @@
   "engines": {
     "node": ">=20"
   },
+  "imports": {
+    "#cds-models/*": "./@cds-models/*/index.js"
+  },
   "devDependencies": {
     "@cap-js/asyncapi": "^1.1.0",
     "@cap-js/cds-test": "^1.0.2",
+    "@cap-js/cds-typer": "^0.41.1",
     "@cap-js/cds-types": "^0.11.0",
     "@cap-js/openapi": "^1.7.0",
     "@cap-js/sqlite": "^2",
@@ -56,13 +60,16 @@
     "@sap/dev-cap-tools": "^1.31.0",
     "@sap/eslint-plugin-cds": "^4.2.5",
     "eslint": "^9.39.5",
-    "jest": "^30.5.2"
+    "jest": "^30.5.2",
+    "typescript": "~5.9.3"
   },
   "scripts": {
     "start": "cds-serve",
     "build": "cds build --production",
     "openapi": "node scripts/openapi.js",
     "asyncapi": "cds compile srv --service all --to asyncapi -o docs/asyncapi",
+    "types": "cds-typer \"*\"",
+    "typecheck": "tsc -p jsconfig.json",
     "test": "jest",
     "lint": "eslint . --max-warnings 0",
     "start-local": "npm run generate-entry-point && npm run cds-watch",
@@ -232,6 +239,10 @@
       "asyncapi": {
         "application_namespace": "customer.customermessages"
       }
+    },
+    "typer": {
+      "outputDirectory": "@cds-models",
+      "buildTask": false
     }
   },
   "jest": {

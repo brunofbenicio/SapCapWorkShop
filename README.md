@@ -132,6 +132,12 @@ Fiori elements UI.
   `forUpdate()`; and a read through a service, which checks the authorization. Each example shows its
   CQL and is run by `test/srv/query-examples.test.js`. SQLite ignores row locks, so only the CQN of
   the locks is tested; the locking itself needs SAP HANA and was not verified.
+- Generates TypeScript types from the model for plain JavaScript (`@cap-js/cds-typer`, a development
+  dependency; it needs Node.js 22 or newer): `npm run types` writes them to `@cds-models` (not
+  committed; `cds watch` creates them if they are missing), and `#cds-models/<namespace or service>` imports them
+  (`imports` in `package.json`). `srv/code/typed-example.js` shows typed JSDoc, `npm run typecheck` checks it
+  with TypeScript (`jsconfig.json`), and a test checks that wrong code is reported. The application does not
+  load the example; `where` conditions are not checked by the types.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
@@ -299,6 +305,8 @@ creates triggers for each tenant database by the MTX deployment; this was tested
 ```sh
 npm test        # jest + @cap-js/cds-test, in-memory SQLite, AI SDK mocked
 npm run lint    # eslint with the CAP and CDS rules
+npm run types   # generate the types of the model into @cds-models (cds-typer)
+npm run typecheck  # TypeScript check of the typed example (needs npm run types first)
 ```
 
 The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test. They start the
@@ -344,6 +352,7 @@ server with the mocked S/4HANA service (`test/helpers/server.js`), so they need 
 | `srv/code/message-events.js` | Subscribers of the events `MessageResolved` and `ReplyAdded` |
 | `srv/code/priority.js` | Maps the priority score to a priority level |
 | `srv/code/query-examples.js` | Documented examples of CQL/CQN queries, transactions and row locking (run by the tests) |
+| `srv/code/typed-example.js`, `jsconfig.json`, `test/types/` | Example of code typed with the generated `@cds-models` (`npm run types`, `npm run typecheck`) and the wrong code that the test expects errors for |
 | `http/` | Request files (`*.http`) for REST Client and the IntelliJ HTTP client |
 | `srv/graphql.cds` | Serves `benicio_1_04Srv` and `AdminService` with GraphQL as well |
 | `srv/api-docs.cds`, `scripts/openapi.js` | Titles of the services and the generator of the OpenAPI documents (`npm run openapi`) |
