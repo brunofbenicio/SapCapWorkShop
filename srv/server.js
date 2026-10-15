@@ -5,6 +5,7 @@ const { requestId } = require('./code/server/request-id');
 const { accessLog } = require('./code/server/access-log');
 const { cors } = require('./code/server/cors');
 const { createLifecycle } = require('./code/server/lifecycle');
+const audit = require('./code/audit');
 
 const LOG = cds.log('server');
 
@@ -30,7 +31,8 @@ cds.on('bootstrap', app => {
 	app.get('/health', lifecycle.health());
 });
 
-cds.on('served', services => {
+cds.on('served', async services => {
+	await audit.register();
 	const names = Object.values(services).filter(service => service.endpoints?.length).map(service => service.name);
 	LOG.info(`Ready: ${names.length} services are served (${names.join(', ')})`);
 });
