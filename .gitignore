@@ -37,3 +37,6 @@ mta_archives/
 build/ui-deployer/
 build/dist/
 env/
+
+# Local secrets
+.env
