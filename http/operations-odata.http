@@ -67,6 +67,11 @@ Content-Type: application/json
   "resolution": "Compressor replaced"
 }
 
+### The change history of the message: who changed what (status, category, urgency, sentiment)
+# expect: 200
+GET {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/changes?$select=attribute,valueChangedFrom,valueChangedTo,modification,createdBy,createdAt&$orderby=createdAt
+Authorization: Basic viewer viewer
+
 ### A resolved message cannot be resolved again
 # expect: 409
 POST {{host}}/service/operations/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99)/OperationsService.markAsResolved
