@@ -1,6 +1,6 @@
 const cds = require('@sap/cds');
 const { startServer } = require('../helpers/server');
-const { enableEnrichment, settle, tasks, skipBackoff, TASKS } = require('../helpers/enrichment');
+const { enableEnrichment, settle, enrichmentTasks: tasks, skipBackoff, TASKS } = require('../helpers/enrichment');
 
 // The AI call is mocked: no AI Core binding is needed.
 jest.mock('../../srv/code/genai/orchestration', () => ({
