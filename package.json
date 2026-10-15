@@ -22,6 +22,7 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@cap-js/audit-logging": "^1.3.0",
     "@cap-js/graphql": "^0.14.0",
     "@cap-js/hana": "^2",
     "@sap-ai-sdk/foundation-models": "^1.15.0",
@@ -86,6 +87,11 @@
       },
       "queue": {
         "chunkSize": 3
+      },
+      "audit-log": {
+        "[test]": {
+          "impl": "test/helpers/audit-log-recorder.js"
+        }
       },
       "auth": {
         "[development]": {
