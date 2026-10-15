@@ -95,6 +95,26 @@ entity CustomerMessages : cuid, managed
      */
     @title : '{i18n>DisplayTitle}'
     displayTitle : String(100) = coalesce(titleEnglish, titleCustomerLanguage) stored;
+
+    replies : Composition of many CustomerMessageReplies
+        on replies.message = $self
+        @title : '{i18n>Replies}';
+}
+
+/**
+ * Reply that an agent sent to a customer message. Replies are part of the
+ * message: they are created, edited and deleted together with it.
+ */
+@title : '{i18n>CustomerMessageReplies}'
+entity CustomerMessageReplies : cuid, managed
+{
+    message : Association to one CustomerMessages;
+    author : String(100)
+        @mandatory;
+    text : String(2000)
+        @mandatory;
+    sentAt : Timestamp
+        @cds.on.insert : $now;
 }
 
 annotate CustomerMessages with @assert.unique :
