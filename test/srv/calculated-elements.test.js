@@ -1,5 +1,6 @@
 const cds = require('@sap/cds');
 const { startServer } = require('../helpers/server');
+const { enableEnrichment, settle } = require('../helpers/enrichment');
 
 // The AI call is mocked and fails by default, so the seeded values stay as they are.
 jest.mock('../../srv/code/genai/orchestration', () => ({
@@ -104,6 +105,9 @@ describe('calculated elements of CustomerMessages', () => {
                 messageUrgency: 'High',
                 messageSentiment: 'Negative'
             });
+            enableEnrichment();
+            await GET(select); // schedules the enrichment, which runs in the task queue after the request
+            await settle();
             const { data: after } = await GET(select);
 
             expect(after.value[0].priorityScore).toBe(5);

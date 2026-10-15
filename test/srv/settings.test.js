@@ -1,5 +1,6 @@
 const cds = require('@sap/cds');
 const { startServer } = require('../helpers/server');
+const { enableEnrichment, settle } = require('../helpers/enrichment');
 
 // The AI call is mocked: the tests check whether it is made, and with which model.
 jest.mock('../../srv/code/genai/orchestration', () => ({
@@ -90,10 +91,22 @@ describe('application settings (singleton)', () => {
     });
 
     describe('enrichment handler', () => {
+        // The enrichment runs in the task queue after the READ: read, wait for the queue, read again.
         const readMessage = () => GET(`${MESSAGES}?$filter=customerMessageID eq 3166&$select=titleEnglish,messageCategory`);
+        const readEnriched = async () => {
+            await readMessage();
+            await settle();
+            return readMessage();
+        };
+
+        beforeAll(() => {
+            enableEnrichment();
+        });
+
+        beforeEach(() => settle());
 
         it('enriches messages while automatic enrichment is on', async () => {
-            const { data } = await readMessage();
+            const { data } = await readEnriched();
 
             expect(preprocessCustomerMessage).toHaveBeenCalled();
             expect(data.value[0]).toMatchObject({ titleEnglish: 'Defective compressor', messageCategory: 'Technical' });
@@ -102,7 +115,7 @@ describe('application settings (singleton)', () => {
         it('does not call the AI service while automatic enrichment is off', async () => {
             await PATCH(ADMIN_SETTINGS, { autoEnrichment: false });
 
-            const { status, data } = await readMessage();
+            const { status, data } = await readEnriched();
 
             expect(status).toBe(200);
             expect(preprocessCustomerMessage).not.toHaveBeenCalled();
@@ -111,11 +124,11 @@ describe('application settings (singleton)', () => {
 
         it('enriches the missing messages after the option is switched on again', async () => {
             await PATCH(ADMIN_SETTINGS, { autoEnrichment: false });
-            await readMessage();
+            await readEnriched();
             expect(preprocessCustomerMessage).not.toHaveBeenCalled();
 
             await PATCH(ADMIN_SETTINGS, { autoEnrichment: true });
-            const { data } = await readMessage();
+            const { data } = await readEnriched();
 
             expect(preprocessCustomerMessage).toHaveBeenCalled();
             expect(data.value[0].titleEnglish).toBe('Defective compressor');
@@ -124,7 +137,7 @@ describe('application settings (singleton)', () => {
         it('passes the configured model name to the AI service', async () => {
             await PATCH(ADMIN_SETTINGS, { aiModelName: 'gpt-4.1-mini' });
 
-            await readMessage();
+            await readEnriched();
 
             expect(preprocessCustomerMessage).toHaveBeenCalledWith(expect.any(String), expect.any(String), { modelName: 'gpt-4.1-mini' });
         });
@@ -133,7 +146,7 @@ describe('application settings (singleton)', () => {
             await PATCH(ADMIN_SETTINGS, { aiModelName: 'gpt-4.1-mini' });
             await PATCH(ADMIN_SETTINGS, { aiModelName: null });
 
-            await readMessage();
+            await readEnriched();
 
             expect(preprocessCustomerMessage).toHaveBeenCalledWith(expect.any(String), expect.any(String), { modelName: undefined });
         });
@@ -141,7 +154,7 @@ describe('application settings (singleton)', () => {
         it('falls back to the defaults when the settings row is missing', async () => {
             await cds.db.run(DELETE.from('Benicio_1_04.Settings'));
 
-            const { status } = await readMessage();
+            const { status } = await readEnriched();
 
             expect(status).toBe(200);
             expect(preprocessCustomerMessage).toHaveBeenCalledWith(expect.any(String), expect.any(String), { modelName: undefined });
