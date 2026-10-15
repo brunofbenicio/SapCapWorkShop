@@ -1,6 +1,6 @@
 const cds = require('@sap/cds');
 const LOG = cds.log('GenAI');
-const { preprocessCustomerMassage } = require('./genai/orchestration');
+const { preprocessCustomerMessage } = require('./genai/orchestration');
 
 module.exports = async function(request) {
 	let customerMessages;
@@ -8,8 +8,8 @@ module.exports = async function(request) {
 		// Fetch all customer messages for processing
 		customerMessages = await SELECT.from('Benicio_1_04.CustomerMessages').forUpdate();
 	} catch (error) {
-		LOG.error('Failed to retrive customer messages', error.message);
-		return request.reject(500, 'Failed to retrive customer messages');
+		LOG.error('Failed to retrieve customer messages', error.message);
+		return request.reject(500, 'Failed to retrieve customer messages');
 	}
 	
 	// Process each customer message concurrently using Promise.all
@@ -32,7 +32,7 @@ module.exports = async function(request) {
 			let resultJSON;
 			try {
 				// Preprocess the customer message using an external service
-				resultJSON = await preprocessCustomerMassage(titleCustomerLanguage, fullMessageCustomerLanguage);
+				resultJSON = await preprocessCustomerMessage(titleCustomerLanguage, fullMessageCustomerLanguage);
 			} catch (error) {
 				LOG.error(`Error from completion service for CustomerMessage ID ${ID}: ${error.message}`);
 				return;  // Skip this message and proceed to the next

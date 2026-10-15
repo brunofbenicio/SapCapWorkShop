@@ -78,7 +78,7 @@ function parseModelJson(content) {
 // Takes title and full message in customer's language.
 // Returns structured JSON with translated title and message, summaries, categories, urgency, and sentiment.
 
-async function preprocessCustomerMassage(titleCustomerLanguage, fullMessageCustomerLanguage) {
+async function preprocessCustomerMessage(titleCustomerLanguage, fullMessageCustomerLanguage) {
     const prompt = `
     Categorize the fullMessageCustomerLanguage into one of (Technical, Delivery, Service).
     Classify urgency of the fullMessageCustomerLanguage into one of (High, Medium, Low).
@@ -117,6 +117,6 @@ async function preprocessCustomerMassage(titleCustomerLanguage, fullMessageCusto
 }
 
 module.exports = {
-    preprocessCustomerMassage,
+    preprocessCustomerMessage,
     getLlmConfig,
 }
