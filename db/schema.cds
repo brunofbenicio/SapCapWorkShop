@@ -99,6 +99,9 @@ entity CustomerMessages : cuid, managed
     replies : Composition of many CustomerMessageReplies
         on replies.message = $self
         @title : '{i18n>Replies}';
+    attachments : Composition of many CustomerMessageAttachments
+        on attachments.message = $self
+        @title : '{i18n>Attachments}';
 }
 
 /**
@@ -115,6 +118,25 @@ entity CustomerMessageReplies : cuid, managed
         @mandatory;
     sentAt : Timestamp
         @cds.on.insert : $now;
+}
+
+/**
+ * File attached to a customer message, for example a photo of the defect.
+ * The binary content is streamed: it is not part of the entity JSON and is
+ * served as a download (Content-Disposition: attachment).
+ */
+@title : '{i18n>CustomerMessageAttachments}'
+entity CustomerMessageAttachments : cuid, managed
+{
+    message : Association to one CustomerMessages;
+    fileName : String(255)
+        @mandatory;
+    mediaType : String(100)
+        @Core.IsMediaType;
+    content : LargeBinary
+        @Core.MediaType : mediaType
+        @Core.ContentDisposition.Filename : fileName
+        @Core.ContentDisposition.Type : 'attachment';
 }
 
 annotate CustomerMessages with @assert.unique :
