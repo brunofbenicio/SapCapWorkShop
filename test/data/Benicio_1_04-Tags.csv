@@ -1,0 +1,7 @@
+code;title;createdAt;createdBy;modifiedAt;modifiedBy
+urgent-repair;Urgent repair;2025-03-03T08:00:00Z;agent;2025-03-03T08:00:00Z;agent
+warranty;Warranty;2025-03-03T08:00:00Z;agent;2025-03-03T08:00:00Z;agent
+noise;Noise;2025-03-03T08:00:00Z;agent;2025-03-03T08:00:00Z;agent
+delivery-delay;Delivery delay;2025-03-03T08:00:00Z;agent;2025-03-03T08:00:00Z;agent
+delivery-damage;Delivery damage;2025-03-03T08:00:00Z;agent;2025-03-03T08:00:00Z;agent
+positive-feedback;Positive feedback;2025-03-03T08:00:00Z;agent;2025-03-03T08:00:00Z;agent

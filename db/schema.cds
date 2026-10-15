@@ -102,6 +102,9 @@ entity CustomerMessages : cuid, managed
     attachments : Composition of many CustomerMessageAttachments
         on attachments.message = $self
         @title : '{i18n>Attachments}';
+    tags : Composition of many CustomerMessageTags
+        on tags.message = $self
+        @title : '{i18n>Tags}';
 }
 
 /**
@@ -138,6 +141,37 @@ entity CustomerMessageAttachments : cuid, managed
         @Core.ContentDisposition.Filename : fileName
         @Core.ContentDisposition.Type : 'attachment';
 }
+
+/**
+ * Free-form label that can be put on many messages, for example "warranty".
+ * Together with CustomerMessageTags it forms a many-to-many relation.
+ */
+@title : '{i18n>Tags}'
+entity Tags : managed
+{
+    key code : String(40);
+    title : String(100)
+        @mandatory;
+    messages : Association to many CustomerMessageTags
+        on messages.tag = $self;
+}
+
+/**
+ * Link entity of the many-to-many relation between messages and tags.
+ * A tag can be put on a message only once.
+ */
+@title : '{i18n>CustomerMessageTags}'
+entity CustomerMessageTags : cuid
+{
+    message : Association to one CustomerMessages;
+    tag : Association to one Tags
+        @mandatory;
+}
+
+annotate CustomerMessageTags with @assert.unique :
+{
+    messageTag : [ message, tag ],
+};
 
 annotate CustomerMessages with @assert.unique :
 {
