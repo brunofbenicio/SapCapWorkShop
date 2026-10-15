@@ -32,6 +32,9 @@ Fiori elements UI.
 - Provides reply text blocks as temporal data (`ResponseTemplates`). Every version has a
   validity period; reads return the versions valid now, and `sap-valid-at`,
   `sap-valid-from` and `sap-valid-to` read the texts that applied at another time.
+- Keeps application-wide options in the singleton `Settings` (`GET/PATCH /Settings`):
+  `autoEnrichment` switches the GenAI enrichment on or off and `aiModelName` selects the
+  AI model.
 - Offers the message categories as a code list (`MessageCategories`) with texts in English,
   German and Portuguese. The language is taken from the `Accept-Language` header or the
   `sap-locale` URL parameter; other languages fall back to English. Labels of the model
@@ -95,7 +98,9 @@ export AICORE_SERVICE_KEY='{ ...service key JSON... }'
 | `GENAI_MODEL_PARAMS` (JSON) or `cds.genai.modelParams` | `{"temperature":0,"max_tokens":1500}` | Model parameters |
 | `cds.genai.concurrency` | `3` | Maximum parallel AI calls per request |
 
-Environment variables win over `cds.genai` in `package.json`.
+Environment variables win over `cds.genai` in `package.json`. The model name in the
+`Settings` singleton (`aiModelName`) wins over both. With `autoEnrichment` set to `false`
+the enrichment is skipped and the messages are read as they are.
 
 ## Test and lint
 
@@ -127,8 +132,8 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | Path | Purpose |
 |------|---------|
 | `app/` | Fiori elements app `benicio_1_04.myapplication`, UI annotations and launchpad preview |
-| `db/schema.cds` | Domain model: entities `CustomerMessages`, `CustomerMessageReplies`, `CustomerMessageAttachments`, `Tags`, `CustomerMessageTags`, `ResponseTemplates` and `MessageCategories` |
-| `db/data` | Reference data deployed everywhere: texts of the message categories |
+| `db/schema.cds` | Domain model: entities `CustomerMessages`, `CustomerMessageReplies`, `CustomerMessageAttachments`, `Tags`, `CustomerMessageTags`, `ResponseTemplates`, `Settings` and `MessageCategories` |
+| `db/data` | Reference data deployed everywhere: texts of the message categories and the initial settings row |
 | `db/i18n` | Translated labels of the model (English default, `_de`, `_pt`) |
 | `db/src`, `db/undeploy.json` | HDI deployment configuration for HANA |
 | `srv/service.cds` | Service `benicio_1_04Srv` (draft-enabled, requires an authenticated user) |

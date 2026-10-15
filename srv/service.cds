@@ -24,6 +24,10 @@ service benicio_1_04Srv
     entity ResponseTemplates as
         projection on my.ResponseTemplates;
 
+    @odata.singleton
+    entity Settings as
+        projection on my.Settings;
+
     @readonly
     entity MessageCategories as
         projection on my.MessageCategories;

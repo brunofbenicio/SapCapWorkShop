@@ -70,6 +70,15 @@ describe('GenAI orchestration', () => {
             expect(config.templating.template[0].content).toContain('{{?fullMessageCustomerLanguage}}');
         });
 
+        it('uses the model name that is passed as an option', async () => {
+            respondWith(JSON.stringify(MODEL_RESULT));
+
+            await preprocessCustomerMessage('t', 'm', { modelName: 'gpt-4.1-mini' });
+
+            const [config] = mockConstructor.mock.calls[0];
+            expect(config.llm.model_name).toBe('gpt-4.1-mini');
+        });
+
         it('accepts JSON wrapped in a markdown code fence', async () => {
             respondWith('```json\n' + JSON.stringify(MODEL_RESULT) + '\n```');
 
@@ -144,6 +153,15 @@ describe('GenAI orchestration', () => {
                 model_name: 'gpt-4.1-mini',
                 model_params: { temperature: 0, max_tokens: 800 }
             });
+        });
+
+        it('lets an explicit model name win over the environment and cds.env', () => {
+            cds.env.genai = { model: 'gpt-4.1-mini' };
+            process.env.GENAI_MODEL_NAME = 'gemini-2.0-flash';
+
+            expect(getLlmConfig({ modelName: 'gpt-4.1' }).model_name).toBe('gpt-4.1');
+            expect(getLlmConfig({ modelName: '' }).model_name).toBe('gemini-2.0-flash');
+            expect(getLlmConfig({}).model_name).toBe('gemini-2.0-flash');
         });
 
         it('lets environment variables override cds.env', () => {

@@ -73,7 +73,7 @@ describe('before READ enrichment of CustomerMessages', () => {
 
         expect(status).toBe(200);
         expect(preprocessCustomerMessage).toHaveBeenCalledTimes(1);
-        expect(preprocessCustomerMessage).toHaveBeenCalledWith('Titre 1', 'Message 1');
+        expect(preprocessCustomerMessage).toHaveBeenCalledWith('Titre 1', 'Message 1', { modelName: undefined });
         expect(data.value[0]).toMatchObject(AI_RESULT);
         expect(await readRow(1)).toMatchObject(AI_RESULT);
     });
