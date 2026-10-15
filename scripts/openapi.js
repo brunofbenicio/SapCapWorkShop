@@ -7,7 +7,8 @@
 // OData documents only. The REST protocol of the OperationsService is not documented here: the
 // compiler describes it with the key notation of OData (/CustomerMessages({ID})), which is not
 // the path of the REST adapter (/CustomerMessages/<ID>); see http/operations-rest.http. External
-// services (the imported S/4HANA API) are not served by this application and are skipped.
+// services (the imported S/4HANA API) and internal ones (@protocol: 'none', the EnrichmentService)
+// have no API of this application and are skipped.
 const fs = require('fs');
 const path = require('path');
 const cds = require('@sap/cds');
@@ -42,6 +43,11 @@ async function compileOpenApi(root = cds.root) {
 	const external = new Set(Object.entries(csn.definitions)
 		.filter(([, definition]) => definition.kind === 'service' && definition['@cds.external'])
 		.map(([name]) => name));
+	for (const [name, definition] of Object.entries(csn.definitions)) {
+		if (definition.kind === 'service' && definition['@protocol'] === 'none') {
+			for (const other of Object.keys(csn.definitions)) if (other === name || other.startsWith(`${name}.`)) delete csn.definitions[other];
+		}
+	}
 
 	const documents = new Map();
 	for (const [document, { file }] of compile(csn, { service: 'all', 'openapi:diagram': false })) {
