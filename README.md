@@ -126,6 +126,12 @@ Fiori elements UI.
   of the model in `db/i18n`. The service delivers the `$metadata` in the language of the request
   (`Accept-Language` or `sap-locale`); other languages get English. The texts of the UI5 app itself
   (`webapp/i18n`, title of the app) are not translated.
+- Documents programmatic queries (`srv/code/query-examples.js`): SELECT with filters, expand, path
+  expressions, sub-selects, joins and aggregations; INSERT, UPDATE, UPSERT and DELETE; CQN and CQL
+  text; transactions with `cds.tx` (callback, and explicit commit and rollback); row locking with
+  `forUpdate()`; and a read through a service, which checks the authorization. Each example shows its
+  CQL and is run by `test/srv/query-examples.test.js`. SQLite ignores row locks, so only the CQN of
+  the locks is tested; the locking itself needs SAP HANA and was not verified.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
@@ -337,6 +343,7 @@ server with the mocked S/4HANA service (`test/helpers/server.js`), so they need 
 | `srv/operations-service.cds`, `srv/operations-service.js` | `OperationsService` with its action, functions and handlers |
 | `srv/code/message-events.js` | Subscribers of the events `MessageResolved` and `ReplyAdded` |
 | `srv/code/priority.js` | Maps the priority score to a priority level |
+| `srv/code/query-examples.js` | Documented examples of CQL/CQN queries, transactions and row locking (run by the tests) |
 | `http/` | Request files (`*.http`) for REST Client and the IntelliJ HTTP client |
 | `srv/graphql.cds` | Serves `benicio_1_04Srv` and `AdminService` with GraphQL as well |
 | `srv/api-docs.cds`, `scripts/openapi.js` | Titles of the services and the generator of the OpenAPI documents (`npm run openapi`) |
