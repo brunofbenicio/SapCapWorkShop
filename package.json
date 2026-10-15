@@ -42,6 +42,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@cap-js/asyncapi": "^1.1.0",
     "@cap-js/cds-test": "^1.0.2",
     "@cap-js/cds-types": "^0.11.0",
     "@cap-js/openapi": "^1.7.0",
@@ -57,6 +58,7 @@
     "start": "cds-serve",
     "build": "cds build --production",
     "openapi": "node scripts/openapi.js",
+    "asyncapi": "cds compile srv --service all --to asyncapi -o docs/asyncapi",
     "test": "jest",
     "lint": "eslint . --max-warnings 0",
     "start-local": "npm run generate-entry-point && npm run cds-watch",
@@ -130,6 +132,11 @@
         "[production]": {
           "graphiql": false
         }
+      }
+    },
+    "export": {
+      "asyncapi": {
+        "application_namespace": "customer.customermessages"
       }
     }
   },

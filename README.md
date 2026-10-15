@@ -73,6 +73,10 @@ Fiori elements UI.
   `http/operations-rest.http`. A Swagger UI for development is not set up:
   `cds-swagger-ui-express` 0.11 fails on the draft-enabled model with `@sap/cds` 9 ("an element
   can't be virtual and an association"), so it is not used.
+- Documents the events as AsyncAPI: `npm run asyncapi` writes `docs/asyncapi/OperationsService.json`
+  (`@cap-js/asyncapi`, namespace `customer.customermessages` from `cds.export.asyncapi` in
+  `package.json`, title from `@AsyncAPI.*` in `srv/api-docs.cds`; the folder is git-ignored). A test
+  checks that the payload of the emitted events matches the document.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
