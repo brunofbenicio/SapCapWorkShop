@@ -42,6 +42,12 @@ Fiori elements UI.
   `priorityScore`) and the function `statistics()` (message counts by status, category and
   urgency). The status of a message (`Open`, `Resolved`) can only be changed by the action.
   The action `addReply(author, text)` adds a reply to a message.
+- Provides read-only analytics, the `AnalyticsService` (`/service/analytics`): the entity
+  `MessageAnalytics` supports `$apply` (`groupby`, `aggregate`, `filter`), so clients can count
+  and average on the server, for example
+  `MessageAnalytics?$apply=groupby((messageCategory),aggregate($count as messages))` or
+  `...groupby((originatingCountry),aggregate(priorityScore with average as averageScore))`.
+  Groupable: category, urgency, sentiment, country, status. Viewer role required.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
@@ -76,6 +82,9 @@ Fiori elements UI  ->  benicio_1_04Srv (OData V4, /service/benicio_1_04)
 
 Agents  ->  OperationsService (OData V4, /service/operations)
               `-- markAsResolved, suggestedPriority, statistics
+
+Charts  ->  AnalyticsService (OData V4, /service/analytics)
+              `-- MessageAnalytics with $apply=groupby/aggregate
 ```
 
 **Enrichment.** On every `READ` of `CustomerMessages` the handler in
@@ -178,6 +187,7 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | `srv/service.cds` | Service `benicio_1_04Srv` (draft-enabled, requires an authenticated user) |
 | `srv/admin-service.cds` | `AdminService` for tags, response templates and settings, with its restrictions |
 | `srv/authorization.cds` | Role-based and instance-based restrictions of `benicio_1_04Srv` and `OperationsService` |
+| `srv/analytics-service.cds` | `AnalyticsService`: read-only `MessageAnalytics` with `@Aggregation.ApplySupported` |
 | `srv/operations-service.cds`, `srv/operations-service.js` | `OperationsService` with its action, functions and handlers |
 | `srv/code/message-events.js` | Subscribers of the events `MessageResolved` and `ReplyAdded` |
 | `srv/code/priority.js` | Maps the priority score to a priority level |
