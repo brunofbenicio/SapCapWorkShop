@@ -2,7 +2,7 @@ namespace Benicio_1_04;
 
 using { S4HCP_ServiceOrder_Odata } from '../srv/external/S4HCP_ServiceOrder_Odata.cds';
 
-using { cuid, managed, sap.common.CodeList } from '@sap/cds/common';
+using { cuid, managed, temporal, sap.common.CodeList } from '@sap/cds/common';
 
 /**
  * Values of the AI-derived classification fields. The GenAI prompt in
@@ -165,6 +165,25 @@ entity CustomerMessageTags : cuid
 {
     message : Association to one CustomerMessages;
     tag : Association to one Tags
+        @mandatory;
+}
+
+/**
+ * Text blocks for replies to customers. Templates are temporal: every version
+ * is valid for a period (validFrom inclusive, validTo exclusive), so the text
+ * that applied on a given date can still be read ("time travel").
+ */
+@title : '{i18n>ResponseTemplates}'
+entity ResponseTemplates : temporal, managed
+{
+    key code : String(40);
+    // Without an explicit period a version is valid from now on and without end.
+    validFrom : Timestamp default $now @cds.valid.from;
+    validTo : Timestamp default '9999-12-31T23:59:59.999Z' @cds.valid.to;
+    title : String(100)
+        @mandatory;
+    messageCategory : MessageCategory;
+    text : String(2000)
         @mandatory;
 }
 

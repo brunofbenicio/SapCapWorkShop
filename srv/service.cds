@@ -21,6 +21,9 @@ service benicio_1_04Srv
     entity Tags as
         projection on my.Tags;
 
+    entity ResponseTemplates as
+        projection on my.ResponseTemplates;
+
     @readonly
     entity MessageCategories as
         projection on my.MessageCategories;
