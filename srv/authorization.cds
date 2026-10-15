@@ -14,6 +14,7 @@ annotate benicio_1_04Srv.CustomerMessages with @restrict :
 [
     { grant : 'READ', to : 'Viewer' },
     { grant : 'CREATE', to : 'Agent' },
+    { grant : 'markAsResolved', to : 'Agent' },
     { grant : [ 'UPDATE', 'DELETE' ], to : 'Admin' },
     { grant : [ 'UPDATE', 'DELETE' ], to : 'Agent', where : 'createdBy = $user' }
 ];

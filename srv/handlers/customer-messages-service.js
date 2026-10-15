@@ -16,11 +16,24 @@ const ALLOWED_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'applicatio
  */
 module.exports = class CustomerMessagesService extends benicio_1_04Srv {
 	async init() {
+		this.on('markAsResolved', 'CustomerMessages', req => this.resolveMessage(req));
 		this.on('READ', 'A_ServiceOrder', req => this.readServiceOrders(req));
 		this.before('*', req => this.checkGraphQLReadOnly(req));
 		this.before('SAVE', 'CustomerMessages', req => this.checkMessage(req));
 		this.before(['NEW', 'UPDATE'], 'CustomerMessageAttachments.drafts', req => this.checkUpload(req));
 		return super.init();
+	}
+
+	// The action markAsResolved of the app is the action of the work queue: the OperationsService sets the
+	// status and emits the event MessageResolved. It runs in the transaction of this request, as the same user.
+	async resolveMessage(req) {
+		const { ID } = req.params.at(-1);
+		const operations = await cds.connect.to('OperationsService');
+		await operations.tx(req).send({ event: 'markAsResolved', entity: 'OperationsService.CustomerMessages', params: [{ ID }], data: req.data });
+
+		const message = await this.run(cds.ql.SELECT.one.from(req.subject));
+		req.info({ message: 'MESSAGE_RESOLVED', args: [message.customerMessageID] });
+		return message;
 	}
 
 	// The service orders are not stored here: reads are passed on to the S/4HANA service (a destination in

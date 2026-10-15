@@ -118,6 +118,47 @@ entity CustomerMessages : cuid, managed
     );
 
     /**
+     * Criticality of the urgency, the sentiment, the status and the priority for the UI
+     * (0 neutral, 1 negative/red, 2 critical/orange, 3 positive/green). Calculated on read.
+     */
+    @UI.Hidden
+    urgencyCriticality : Integer = (
+        case
+            when messageUrgency = 'High' then 1
+            when messageUrgency = 'Medium' then 2
+            when messageUrgency = 'Low' then 3
+            else 0
+        end
+    );
+
+    @UI.Hidden
+    sentimentCriticality : Integer = (
+        case
+            when messageSentiment = 'Negative' then 1
+            when messageSentiment = 'Positive' then 3
+            else 0
+        end
+    );
+
+    @UI.Hidden
+    statusCriticality : Integer = (
+        case
+            when status = 'Open' then 2
+            when status = 'Resolved' then 3
+            else 0
+        end
+    );
+
+    @UI.Hidden
+    priorityCriticality : Integer = (
+        case
+            when priorityScore >= 4 then 1
+            when priorityScore >= 2 then 2
+            else 3
+        end
+    );
+
+    /**
      * English title when available, otherwise the title in the customer's
      * language. Stored in the database, so it can be sorted and searched cheaply.
      */
