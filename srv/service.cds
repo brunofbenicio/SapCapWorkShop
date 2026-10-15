@@ -15,6 +15,12 @@ service benicio_1_04Srv
     entity CustomerMessageAttachments as
         projection on my.CustomerMessageAttachments;
 
+    entity CustomerMessageTags as
+        projection on my.CustomerMessageTags;
+
+    entity Tags as
+        projection on my.Tags;
+
     @readonly
     entity MessageCategories as
         projection on my.MessageCategories;
