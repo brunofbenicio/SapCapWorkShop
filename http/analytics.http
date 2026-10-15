@@ -1,0 +1,48 @@
+# Analytics on the customer messages (AnalyticsService, /service/analytics)
+#
+# MessageAnalytics supports the OData data aggregation extension: $apply with groupby, aggregate
+# and filter. Start the app with `npm run cds-watch` (http://localhost:4004). The messages are
+# classified by the AI when they are read, so read the messages once (see messages.http) for
+# category, urgency and sentiment to be filled. The users are the mocked users.
+
+@host = http://localhost:4004
+
+### Messages per country
+# expect: 200
+GET {{host}}/service/analytics/MessageAnalytics?$apply=groupby((originatingCountry),aggregate($count%20as%20messages))&$orderby=messages%20desc,originatingCountry
+Authorization: Basic viewer viewer
+
+### Messages per category and urgency
+# expect: 200
+GET {{host}}/service/analytics/MessageAnalytics?$apply=groupby((messageCategory,messageUrgency),aggregate($count%20as%20messages))
+Authorization: Basic viewer viewer
+
+### Average priority score per category
+# expect: 200
+GET {{host}}/service/analytics/MessageAnalytics?$apply=groupby((messageCategory),aggregate(priorityScore%20with%20average%20as%20averageScore))&$orderby=averageScore%20desc
+Authorization: Basic viewer viewer
+
+### Totals of all messages: count, lowest, highest and average priority score
+# expect: 200
+GET {{host}}/service/analytics/MessageAnalytics?$apply=aggregate($count%20as%20messages,priorityScore%20with%20min%20as%20lowest,priorityScore%20with%20max%20as%20highest,priorityScore%20with%20average%20as%20average)
+Authorization: Basic viewer viewer
+
+### Open messages per sentiment
+# expect: 200
+GET {{host}}/service/analytics/MessageAnalytics?$apply=filter(status%20eq%20'Open')/groupby((messageSentiment),aggregate(messageCount%20with%20sum%20as%20open))
+Authorization: Basic viewer viewer
+
+### Number of different countries
+# expect: 200
+GET {{host}}/service/analytics/MessageAnalytics?$apply=groupby((originatingCountry))&$count=true&$top=0
+Authorization: Basic viewer viewer
+
+### The view is read-only
+# expect: 405
+POST {{host}}/service/analytics/MessageAnalytics
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "customerMessageID": 9002
+}

@@ -1,0 +1,97 @@
+# Work queue of the agents as REST (OperationsService, /rest/service/operations)
+#
+# The operations service is served with two protocols: OData V4 at /service/operations and plain
+# REST at /rest/service/operations. REST returns plain JSON (a list is an array, errors are
+# { "error": { "message", "code" } }), reads an entity at /<Entity>/<key> and calls bound actions
+# and functions at /<Entity>/<key>/<name>. The users are the mocked users (the password is the
+# user name). Run the requests top down; start the app with `npm run cds-watch`.
+
+@host = http://localhost:4004
+
+### List of the entities of the service
+# expect: 200
+GET {{host}}/rest/service/operations
+Authorization: Basic viewer viewer
+
+### Open messages, filtered, sorted and limited with the OData query options
+# expect: 200
+GET {{host}}/rest/service/operations/CustomerMessages?$filter=status%20eq%20'Open'&$orderby=customerMessageID&$top=3&$select=ID,customerMessageID,customerName
+Authorization: Basic viewer viewer
+
+### One message by its key
+# expect: 200
+GET {{host}}/rest/service/operations/CustomerMessages/e522550f-ac79-40ab-82f9-fdebf97d9a96
+Authorization: Basic viewer viewer
+
+### A message that does not exist
+# expect: 404
+GET {{host}}/rest/service/operations/CustomerMessages/00000000-0000-4000-8000-000000000000
+Authorization: Basic viewer viewer
+
+### Suggested priority (bound function)
+# expect: 200
+GET {{host}}/rest/service/operations/CustomerMessages/e522550f-ac79-40ab-82f9-fdebf97d9a96/suggestedPriority
+Authorization: Basic viewer viewer
+
+### Statistics (unbound function)
+# expect: 200
+GET {{host}}/rest/service/operations/statistics
+Authorization: Basic viewer viewer
+
+### Add a reply (bound action)
+# expect: 200
+POST {{host}}/rest/service/operations/CustomerMessages/e522550f-ac79-40ab-82f9-fdebf97d9a96/addReply
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "author": "Support Team",
+  "text": "Thank you, we have noted the problem with the drainage."
+}
+
+### The author and the text are mandatory
+# expect: 400
+POST {{host}}/rest/service/operations/CustomerMessages/e522550f-ac79-40ab-82f9-fdebf97d9a96/addReply
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "author": "Support Team"
+}
+
+### Resolve the message (bound action)
+# expect: 200
+POST {{host}}/rest/service/operations/CustomerMessages/e522550f-ac79-40ab-82f9-fdebf97d9a96/markAsResolved
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "resolution": "Drain cleaned during the next visit"
+}
+
+### Resolving it again fails
+# expect: 409
+POST {{host}}/rest/service/operations/CustomerMessages/e522550f-ac79-40ab-82f9-fdebf97d9a96/markAsResolved
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{}
+
+### Without credentials the request is refused
+# expect: 401
+GET {{host}}/rest/service/operations/CustomerMessages
+
+### A login without a role is refused
+# expect: 403
+GET {{host}}/rest/service/operations/CustomerMessages
+Authorization: Basic stranger stranger
+
+### The entities are read-only
+# expect: 405
+POST {{host}}/rest/service/operations/CustomerMessages
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "customerMessageID": 9002
+}

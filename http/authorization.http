@@ -1,0 +1,53 @@
+# Authentication and authorization of the services
+#
+# Development and tests use the mocked users viewer, agent and admin (the password is the user name);
+# production uses XSUAA. Start the app with `npm run cds-watch` (http://localhost:4004).
+# Without credentials a request gets 401. A user without any of the roles Viewer, Agent and Admin
+# gets 403. "stranger" is such a user: the mocked authentication accepts any user name that is not
+# configured, with an empty password, as a user without roles.
+
+@host = http://localhost:4004
+
+### No credentials
+# expect: 401
+GET {{host}}/service/benicio_1_04/CustomerMessages
+
+### Wrong password
+# expect: 401
+GET {{host}}/service/benicio_1_04/CustomerMessages
+Authorization: Basic viewer wrong
+
+### A user without a role
+# expect: 403
+GET {{host}}/service/benicio_1_04/CustomerMessages
+Authorization: Basic stranger stranger
+
+### The roles are named like the scopes in xs-security.json. A viewer reads...
+# expect: 200
+GET {{host}}/service/benicio_1_04/CustomerMessages?$top=1&$select=customerMessageID
+Authorization: Basic viewer viewer
+
+### ...but may not change anything: editing a message (which creates a draft) is refused
+# expect: 403
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99,IsActiveEntity=true)/benicio_1_04Srv.draftEdit
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "PreserveChanges": true
+}
+
+### The sample messages were created by the agent, so the agent may edit them...
+# expect: 201
+POST {{host}}/service/benicio_1_04/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99,IsActiveEntity=true)/benicio_1_04Srv.draftEdit
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "PreserveChanges": true
+}
+
+### ...and discard the draft again
+# expect: 204
+DELETE {{host}}/service/benicio_1_04/CustomerMessages(ID=08bb27b2-9357-4598-9ea3-6b9f8dcb6d99,IsActiveEntity=false)
+Authorization: Basic agent agent
