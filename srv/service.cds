@@ -9,6 +9,10 @@ service benicio_1_04Srv
     entity CustomerMessages as
         projection on my.CustomerMessages;
 
+    @readonly
+    entity MessageCategories as
+        projection on my.MessageCategories;
+
     entity A_ServiceOrder as
         projection on S4HCP_ServiceOrder_Odata.A_ServiceOrder
         {
