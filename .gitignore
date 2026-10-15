@@ -46,3 +46,6 @@ env/
 
 # Generated OpenAPI documents (npm run openapi)
 docs/openapi/
+
+# Generated AsyncAPI documents (npm run asyncapi)
+docs/asyncapi/
