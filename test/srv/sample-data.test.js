@@ -62,6 +62,13 @@ describe('sample data in development', () => {
         }
     });
 
+    it('records the creation of every message', () => {
+        for (const message of messages) {
+            expect(message.createdBy).toBe('agent');
+            expect(Date.parse(message.createdAt)).not.toBeNaN();
+        }
+    });
+
     it('has unique customer message IDs', () => {
         const ids = messages.map(message => message.customerMessageID);
 

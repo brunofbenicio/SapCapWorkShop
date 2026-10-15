@@ -158,6 +158,34 @@ describe('CustomerMessages service', () => {
         });
     });
 
+    describe('managed data', () => {
+        it('records who created a message and when', async () => {
+            const created = await createDraft({ customerMessageID: 9007 });
+            await POST(`${draft(created.ID)}/${ACTIVATE}`, {});
+
+            const { data } = await GET(active(created.ID));
+
+            expect(data.createdBy).toBe('privileged'); // the user of the dummy authentication
+            expect(new Date(data.createdAt).getTime()).toBeGreaterThan(Date.parse('2025-01-01'));
+            expect(data.modifiedAt).toBeTruthy();
+            expect(data.modifiedBy).toBe('privileged');
+        });
+
+        it('updates modifiedAt but keeps createdAt when a message is edited', async () => {
+            const { data: before } = await GET(active(FREEZER_COMPRESSOR));
+
+            await POST(`${active(FREEZER_COMPRESSOR)}/${EDIT}`, { PreserveChanges: true });
+            await PATCH(draft(FREEZER_COMPRESSOR), { customerName: 'Camille Durand' });
+            await POST(`${draft(FREEZER_COMPRESSOR)}/${ACTIVATE}`, {});
+            const { data: after } = await GET(active(FREEZER_COMPRESSOR));
+
+            expect(after.createdAt).toBe(before.createdAt);
+            expect(after.createdBy).toBe(before.createdBy);
+            expect(Date.parse(after.modifiedAt)).toBeGreaterThan(Date.parse(before.modifiedAt));
+            expect(after.modifiedBy).toBe('privileged');
+        });
+    });
+
     describe('validation', () => {
         it('saves a draft without customerMessageID but rejects its activation (@mandatory)', async () => {
             const created = await createDraft({ customerName: 'No ID yet' });
@@ -187,6 +215,22 @@ describe('CustomerMessages service', () => {
             expect(status).toBeGreaterThanOrEqual(400);
             const { data } = await GET(`${URL}?$filter=customerMessageID eq 3166&$select=ID`);
             expect(data.value.map(message => message.ID)).toEqual([FREEZER_COMPRESSOR]);
+        });
+
+        it.each([
+            ['messageCategory', 'Billing', 'Technical'],
+            ['messageUrgency', 'Critical', 'High'],
+            ['messageSentiment', 'Angry', 'Negative']
+        ])('only activates a message with an allowed value for %s (enum)', async (field, invalid, valid) => {
+            const created = await createDraft({ customerMessageID: 9006, [field]: invalid });
+
+            const rejected = await POST(`${draft(created.ID)}/${ACTIVATE}`, {}, ANY_STATUS);
+            await PATCH(draft(created.ID), { [field]: valid });
+            const accepted = await POST(`${draft(created.ID)}/${ACTIVATE}`, {}, ANY_STATUS);
+
+            expect(rejected.status).toBe(400);
+            expect(rejected.data.error).toMatchObject({ code: 'ASSERT_ENUM', target: `in/${field}` });
+            expect(accepted.status).toBe(201);
         });
 
         it('rejects a customerMessageID that is not an integer', async () => {

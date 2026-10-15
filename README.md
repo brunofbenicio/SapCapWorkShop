@@ -12,7 +12,10 @@ Fiori elements UI.
   `fullMessageCustomerLanguage`) and the AI-derived fields: English title, message and
   summary, a summary in the customer's language, `messageCategory` (Technical, Delivery,
   Service), `messageUrgency` (High, Medium, Low) and `messageSentiment` (Negative,
-  Positive, Neutral).
+  Positive, Neutral). These three fields are enums: the service rejects other values and
+  the AI answer is checked against them.
+- Records `createdAt`, `createdBy`, `modifiedAt` and `modifiedBy` for every message
+  (`managed` aspect).
 - Lets users create and edit messages in a draft before saving them (draft-enabled entity).
 - Links a message to a service order of an SAP S/4HANA system (external OData V2 service).
 - Enriches messages automatically the first time they are read (see below).

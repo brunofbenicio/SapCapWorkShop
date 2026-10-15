@@ -2,9 +2,38 @@ namespace Benicio_1_04;
 
 using { S4HCP_ServiceOrder_Odata } from '../srv/external/S4HCP_ServiceOrder_Odata.cds';
 
-using { cuid } from '@sap/cds/common';
+using { cuid, managed } from '@sap/cds/common';
 
-entity CustomerMessages : cuid
+/**
+ * Values of the AI-derived classification fields. The GenAI prompt in
+ * srv/code/genai/orchestration.js must list exactly these values.
+ * With @assert.range the service rejects other values (ASSERT_ENUM).
+ */
+@assert.range
+type MessageCategory : String(50) enum
+{
+    Technical;
+    Delivery;
+    Service;
+}
+
+@assert.range
+type MessageUrgency : String(20) enum
+{
+    High;
+    Medium;
+    Low;
+}
+
+@assert.range
+type MessageSentiment : String(20) enum
+{
+    Negative;
+    Positive;
+    Neutral;
+}
+
+entity CustomerMessages : cuid, managed
 {
     customerMessageID : Integer
         @mandatory;
@@ -12,9 +41,9 @@ entity CustomerMessages : cuid
     customerName : String(100);
     productName : String(100);
     summaryEnglish : String(500);
-    messageCategory : String(50);
-    messageUrgency : String(20);
-    messageSentiment : String(20);
+    messageCategory : MessageCategory;
+    messageUrgency : MessageUrgency;
+    messageSentiment : MessageSentiment;
     titleCustomerLanguage : String(100);
     customerId : String(50);
     productId : String(50);
