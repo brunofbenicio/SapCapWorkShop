@@ -128,9 +128,10 @@ describe('tags of a customer message (many-to-many)', () => {
             await POST(`${active(FREEZER_COMPRESSOR)}/${EDIT}`, { PreserveChanges: true });
             await POST(`${draft(FREEZER_COMPRESSOR)}/tags`, { tag_code: 'warranty' });
 
-            const { status } = await POST(`${draft(FREEZER_COMPRESSOR)}/${ACTIVATE}`, {}, ANY_STATUS);
+            const { status, data } = await POST(`${draft(FREEZER_COMPRESSOR)}/${ACTIVATE}`, {}, ANY_STATUS);
 
-            expect(status).toBeGreaterThanOrEqual(400);
+            expect(status).toBe(400);
+            expect(data.error).toMatchObject({ code: 'TAG_DUPLICATE', message: 'The tag "warranty" is assigned more than once.' });
             expect(await tagCodes(FREEZER_COMPRESSOR)).toEqual(['urgent-repair', 'warranty']);
         });
 

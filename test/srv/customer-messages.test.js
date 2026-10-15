@@ -210,9 +210,10 @@ describe('CustomerMessages service', () => {
         it('rejects a duplicate customerMessageID (@assert.unique)', async () => {
             const created = await createDraft({ customerMessageID: 3166 });
 
-            const { status } = await POST(`${draft(created.ID)}/${ACTIVATE}`, {}, ANY_STATUS);
+            const { status, data: error } = await POST(`${draft(created.ID)}/${ACTIVATE}`, {}, ANY_STATUS);
 
-            expect(status).toBeGreaterThanOrEqual(400);
+            expect(status).toBe(409);
+            expect(error.error).toMatchObject({ code: 'MESSAGE_ID_NOT_UNIQUE', target: 'in/customerMessageID' });
             const { data } = await GET(`${URL}?$filter=customerMessageID eq 3166&$select=ID`);
             expect(data.value.map(message => message.ID)).toEqual([FREEZER_COMPRESSOR]);
         });

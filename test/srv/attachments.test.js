@@ -78,14 +78,14 @@ describe('attachments of a customer message', () => {
     describe('upload', () => {
         it('stores binary content unchanged and serves it again', async () => {
             await POST(`${active(FREEZER_COMPRESSOR)}/${EDIT}`, { PreserveChanges: true });
-            const ID = await addAttachmentToDraft(FREEZER_COMPRESSOR, 'dump.bin', BINARY, 'application/octet-stream');
+            const ID = await addAttachmentToDraft(FREEZER_COMPRESSOR, 'dump.jpg', BINARY, 'image/jpeg');
             await POST(`${draft(FREEZER_COMPRESSOR)}/${ACTIVATE}`, {});
 
             const response = await download(`${attachment(FREEZER_COMPRESSOR, ID, true)}/content`);
 
             expect(response.status).toBe(200);
-            expect(response.headers['content-type']).toBe('application/octet-stream');
-            expect(response.headers['content-disposition']).toBe('attachment; filename="dump.bin"');
+            expect(response.headers['content-type']).toBe('image/jpeg');
+            expect(response.headers['content-disposition']).toBe('attachment; filename="dump.jpg"');
             expect(Buffer.from(response.data).equals(BINARY)).toBe(true);
             expect(await storedAttachments(FREEZER_COMPRESSOR)).toHaveLength(2);
         });
@@ -117,7 +117,7 @@ describe('attachments of a customer message', () => {
         it('replaces the content of an attachment through a draft', async () => {
             await POST(`${active(FREEZER_COMPRESSOR)}/${EDIT}`, { PreserveChanges: true });
             const { status } = await PUT(`${attachment(FREEZER_COMPRESSOR, SAMPLE_ATTACHMENT, false)}/content`, BINARY, {
-                headers: { 'Content-Type': 'application/octet-stream' }
+                headers: { 'Content-Type': 'image/jpeg' }
             });
             expect(status).toBe(204);
             await POST(`${draft(FREEZER_COMPRESSOR)}/${ACTIVATE}`, {});
