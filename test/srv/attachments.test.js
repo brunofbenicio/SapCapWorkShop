@@ -1,7 +1,8 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 const { SELECT } = cds.ql;
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST, PUT, DELETE } = test;
 
 const URL = '/service/benicio_1_04/CustomerMessages';

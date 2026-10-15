@@ -1,11 +1,12 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 // No AI Core in tests: the enrichment fails, so the AI fields stay as seeded.
 jest.mock('../../srv/code/genai/orchestration', () => ({
     preprocessCustomerMessage: jest.fn().mockRejectedValue(new Error('AI Core is not available'))
 }));
 
-const { GET } = cds.test(__dirname + '/../..');
+const { GET } = startServer();
 
 const AI_FIELDS = [
     'fullMessageEnglish',

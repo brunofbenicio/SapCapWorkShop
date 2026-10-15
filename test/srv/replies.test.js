@@ -1,7 +1,8 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 const { SELECT } = cds.ql;
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST, PATCH, DELETE } = test;
 
 const SERVICE = '/service/benicio_1_04';
@@ -81,7 +82,7 @@ describe('replies of a customer message', () => {
             const [reply] = await dbReplies(created.ID);
 
             expect(Date.parse(reply.sentAt)).toBeGreaterThan(Date.parse('2025-01-01'));
-            expect(reply.createdBy).toBe('privileged');
+            expect(reply.createdBy).toBe('admin');
         });
 
         it('adds a reply to an existing message through its draft', async () => {

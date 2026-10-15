@@ -81,7 +81,30 @@
       },
       "auth": {
         "[development]": {
-          "kind": "dummy"
+          "kind": "mocked",
+          "users": {
+            "viewer": {
+              "password": "viewer",
+              "roles": [
+                "Viewer"
+              ]
+            },
+            "agent": {
+              "password": "agent",
+              "roles": [
+                "Viewer",
+                "Agent"
+              ]
+            },
+            "admin": {
+              "password": "admin",
+              "roles": [
+                "Viewer",
+                "Agent",
+                "Admin"
+              ]
+            }
+          }
         },
         "[production]": {
           "kind": "xsuaa"

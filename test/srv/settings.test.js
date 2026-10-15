@@ -1,4 +1,5 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 // The AI call is mocked: the tests check whether it is made, and with which model.
 jest.mock('../../srv/code/genai/orchestration', () => ({
@@ -8,11 +9,12 @@ jest.mock('../../srv/code/genai/orchestration', () => ({
 const { preprocessCustomerMessage } = require('../../srv/code/genai/orchestration');
 const { DELETE } = cds.ql;
 
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, PATCH, PUT, DELETE: HTTP_DELETE } = test;
 
 const SERVICE = '/service/benicio_1_04';
-const SETTINGS = `${SERVICE}/Settings`;
+const SETTINGS = `${SERVICE}/Settings`; // read-only in this service
+const ADMIN_SETTINGS = '/service/admin/Settings';
 const MESSAGES = `${SERVICE}/CustomerMessages`;
 const ANY_STATUS = { validateStatus: () => true };
 
@@ -54,7 +56,7 @@ describe('application settings (singleton)', () => {
         });
 
         it('updates single options and keeps the others', async () => {
-            const { status, data } = await PATCH(SETTINGS, { aiModelName: 'gpt-4.1-mini' });
+            const { status, data } = await PATCH(ADMIN_SETTINGS, { aiModelName: 'gpt-4.1-mini' });
 
             expect(status).toBe(200);
             expect(data).toMatchObject({ autoEnrichment: true, aiModelName: 'gpt-4.1-mini' });
@@ -65,22 +67,22 @@ describe('application settings (singleton)', () => {
         it('records who changed the settings and when', async () => {
             const { data: before } = await GET(SETTINGS);
 
-            const { data: after } = await PUT(SETTINGS, { autoEnrichment: false });
+            const { data: after } = await PUT(ADMIN_SETTINGS, { autoEnrichment: false });
 
             expect(Date.parse(after.modifiedAt)).toBeGreaterThan(Date.parse(before.modifiedAt));
-            expect(after.modifiedBy).toBe('privileged');
+            expect(after.modifiedBy).toBe('admin');
         });
 
         it('cannot be deleted', async () => {
-            const { status, data } = await HTTP_DELETE(SETTINGS, ANY_STATUS);
+            const { status, data } = await HTTP_DELETE(ADMIN_SETTINGS, ANY_STATUS);
 
-            expect(status).toBe(400);
-            expect(data.error.code).toBe('SINGLETON_NOT_NULLABLE');
+            expect(status).toBe(403); // nobody is granted DELETE, not even an administrator
+            expect(data.error.code).toBe('403');
             expect((await GET(SETTINGS)).status).toBe(200);
         });
 
         it('rejects a value of the wrong type', async () => {
-            const { status, data } = await PATCH(SETTINGS, { autoEnrichment: 'maybe' }, ANY_STATUS);
+            const { status, data } = await PATCH(ADMIN_SETTINGS, { autoEnrichment: 'maybe' }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error.code).toBe('ASSERT_DATA_TYPE');
@@ -98,7 +100,7 @@ describe('application settings (singleton)', () => {
         });
 
         it('does not call the AI service while automatic enrichment is off', async () => {
-            await PATCH(SETTINGS, { autoEnrichment: false });
+            await PATCH(ADMIN_SETTINGS, { autoEnrichment: false });
 
             const { status, data } = await readMessage();
 
@@ -108,11 +110,11 @@ describe('application settings (singleton)', () => {
         });
 
         it('enriches the missing messages after the option is switched on again', async () => {
-            await PATCH(SETTINGS, { autoEnrichment: false });
+            await PATCH(ADMIN_SETTINGS, { autoEnrichment: false });
             await readMessage();
             expect(preprocessCustomerMessage).not.toHaveBeenCalled();
 
-            await PATCH(SETTINGS, { autoEnrichment: true });
+            await PATCH(ADMIN_SETTINGS, { autoEnrichment: true });
             const { data } = await readMessage();
 
             expect(preprocessCustomerMessage).toHaveBeenCalled();
@@ -120,7 +122,7 @@ describe('application settings (singleton)', () => {
         });
 
         it('passes the configured model name to the AI service', async () => {
-            await PATCH(SETTINGS, { aiModelName: 'gpt-4.1-mini' });
+            await PATCH(ADMIN_SETTINGS, { aiModelName: 'gpt-4.1-mini' });
 
             await readMessage();
 
@@ -128,8 +130,8 @@ describe('application settings (singleton)', () => {
         });
 
         it('leaves the model to the configuration when the model name is cleared', async () => {
-            await PATCH(SETTINGS, { aiModelName: 'gpt-4.1-mini' });
-            await PATCH(SETTINGS, { aiModelName: null });
+            await PATCH(ADMIN_SETTINGS, { aiModelName: 'gpt-4.1-mini' });
+            await PATCH(ADMIN_SETTINGS, { aiModelName: null });
 
             await readMessage();
 

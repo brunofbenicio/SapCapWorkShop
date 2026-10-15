@@ -32,7 +32,8 @@ Fiori elements UI.
 - Provides reply text blocks as temporal data (`ResponseTemplates`). Every version has a
   validity period; reads return the versions valid now, and `sap-valid-at`,
   `sap-valid-from` and `sap-valid-to` read the texts that applied at another time.
-- Keeps application-wide options in the singleton `Settings` (`GET/PATCH /Settings`):
+- Keeps application-wide options in the singleton `Settings` (read: `GET /Settings`, change:
+  `PATCH /service/admin/Settings` as Admin):
   `autoEnrichment` switches the GenAI enrichment on or off and `aiModelName` selects the
   AI model.
 - Provides a work queue for agents, the `OperationsService` (`/service/operations`): a
@@ -50,6 +51,11 @@ Fiori elements UI.
   (png, jpeg, gif, pdf, plain text) and at most 5 MB. Messages are keys in
   `srv/_i18n/messages*.properties` (English, German, Portuguese); actions report results as
   info and warning messages in the `sap-messages` header.
+- Restricts access by role (Viewer reads, Agent writes, Admin does everything) and by
+  instance: an Agent can only change or delete the messages (and, in the `AdminService`, the
+  tags and response templates) that the Agent created. The `AdminService`
+  (`/service/admin`) maintains tags, response templates and the settings; they are
+  read-only in the other services.
 - Offers the message categories as a code list (`MessageCategories`) with texts in English,
   German and Portuguese. The language is taken from the `Accept-Language` header or the
   `sap-locale` URL parameter; other languages fall back to English. Labels of the model
@@ -95,8 +101,18 @@ npm run cds-watch      # cds watch --open, serves on http://localhost:4004
 ```
 
 In development the app uses an in-memory SQLite database that is filled from `test/data`,
-dummy authentication (every request is allowed) and, with `cds watch`, a local mock of the
-S/4HANA service.
+mocked authentication with the users below (HTTP basic auth) and, with `cds watch`, a local
+mock of the S/4HANA service.
+
+| User | Password | Roles | May |
+|------|----------|-------|-----|
+| `viewer` | `viewer` | Viewer | read everything |
+| `agent` | `agent` | Viewer, Agent | also create messages, change and delete the messages, tags and templates that the agent created, resolve messages and add replies |
+| `admin` | `admin` | Viewer, Agent, Admin | everything, including the settings and the data of others |
+
+These accounts exist only in the `development` profile and are for local use. Requests
+without credentials get 401, a login without a role gets 403. The browser asks for the
+credentials when it opens the app.
 
 - Service document: <http://localhost:4004/service/benicio_1_04/>
 - Fiori app: <http://localhost:4004/benicio_1_04.myapplication/webapp/index.html>
@@ -134,7 +150,7 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | | `development` (default) | `production` |
 |--|--|--|
 | Database | SQLite in memory | SAP HANA (`@cap-js/hana`) |
-| Authentication | `dummy` | `xsuaa` (see `xs-security.json`) |
+| Authentication | `mocked` (users `viewer`, `agent`, `admin`) | `xsuaa` (see `xs-security.json`) |
 | S/4HANA service | local mock (`cds watch`) | destination `S4HCP-ServiceOrder-Odata` |
 | Messaging | file-based (`.cds-msg-box`, git-ignored) | in-process (`local-messaging`) |
 | Initial data | `db/data` (code lists) and `test/data` (sample messages) | `db/data` only |
@@ -143,7 +159,8 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 - `npm start` runs `cds-serve`; use `NODE_ENV=production` to select the production profile.
 - `xs-security.json` defines the scopes `Viewer`, `Agent` and `Admin`, matching role
   templates and the role collections `CustomerMessages_Viewer`, `CustomerMessages_Agent`
-  and `CustomerMessages_Admin`. The service itself still only requires an authenticated user.
+  and `CustomerMessages_Admin`. The roles of the CDS annotations in `srv/authorization.cds` and
+  `srv/admin-service.cds` are these scopes; Admin includes Agent and Viewer.
 - In production the events are delivered in-process only. To exchange events with other
   applications, bind SAP Event Mesh and set `cds.requires.messaging.kind` to
   `enterprise-messaging` for the `production` profile.
@@ -159,6 +176,8 @@ The tests never call AI Core: `test/setup.js` replaces the AI SDK for every test
 | `db/i18n` | Translated labels of the model (English default, `_de`, `_pt`) |
 | `db/src`, `db/undeploy.json` | HDI deployment configuration for HANA |
 | `srv/service.cds` | Service `benicio_1_04Srv` (draft-enabled, requires an authenticated user) |
+| `srv/admin-service.cds` | `AdminService` for tags, response templates and settings, with its restrictions |
+| `srv/authorization.cds` | Role-based and instance-based restrictions of `benicio_1_04Srv` and `OperationsService` |
 | `srv/operations-service.cds`, `srv/operations-service.js` | `OperationsService` with its action, functions and handlers |
 | `srv/code/message-events.js` | Subscribers of the events `MessageResolved` and `ReplyAdded` |
 | `srv/code/priority.js` | Maps the priority score to a priority level |

@@ -1,11 +1,13 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 const { SELECT } = cds.ql;
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST, PATCH, DELETE } = test;
 
 const SERVICE = '/service/benicio_1_04';
 const URL = `${SERVICE}/CustomerMessages`;
+const ADMIN = '/service/admin'; // tags are maintained here
 const ACTIVATE = 'benicio_1_04Srv.draftActivate';
 const EDIT = 'benicio_1_04Srv.draftEdit';
 const ANY_STATUS = { validateStatus: () => true };
@@ -157,19 +159,19 @@ describe('tags of a customer message (many-to-many)', () => {
 
     describe('tags', () => {
         it('creates, renames and deletes a tag', async () => {
-            const created = await POST(`${SERVICE}/Tags`, { code: 'refund', title: 'Refund' });
+            const created = await POST(`${ADMIN}/Tags`, { code: 'refund', title: 'Refund' });
             expect(created.status).toBe(201);
 
-            const renamed = await PATCH(`${SERVICE}/Tags('refund')`, { title: 'Refund requested' });
+            const renamed = await PATCH(`${ADMIN}/Tags('refund')`, { title: 'Refund requested' });
             expect(renamed.data.title).toBe('Refund requested');
 
-            const deleted = await DELETE(`${SERVICE}/Tags('refund')`);
+            const deleted = await DELETE(`${ADMIN}/Tags('refund')`);
             expect(deleted.status).toBe(204);
-            expect((await GET(`${SERVICE}/Tags('refund')`, ANY_STATUS)).status).toBe(404);
+            expect((await GET(`${ADMIN}/Tags('refund')`, ANY_STATUS)).status).toBe(404);
         });
 
         it('requires a title (@mandatory)', async () => {
-            const { status, data } = await POST(`${SERVICE}/Tags`, { code: 'untitled' }, ANY_STATUS);
+            const { status, data } = await POST(`${ADMIN}/Tags`, { code: 'untitled' }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error).toMatchObject({ code: 'ASSERT_MANDATORY', target: 'title' });
