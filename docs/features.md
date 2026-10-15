@@ -119,3 +119,4 @@ user name), defined in `package.json` under `cds.requires.auth`. The tests start
 |---------|-------------|-------|----------|-------|
 | Cloud Foundry | MTA descriptor, HDI container, XSUAA, destination | `mta.yaml` | `mbt build`, `cf deploy` | `test/deploy/mta.test.js` |
 | Container image | multi-stage `Dockerfile`, `cds build` | `Dockerfile`, `.dockerignore` | `docker build -t customer-messages .` | `test/deploy/docker.test.js` |
+| Continuous integration | GitHub Actions: `npm ci`, lint, test, build, cached npm | `.github/workflows/ci.yml` | `npm ci`, `npm run lint`, `npm test`, `npm run build` | `test/deploy/ci.test.js` |

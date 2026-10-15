@@ -388,6 +388,14 @@ the connection to the database. `test/deploy/docker.test.js` checks the Dockerfi
 without Docker. **Not verified:** a run against SAP HANA and XSUAA, the shutdown on SIGTERM in the container,
 and Kubernetes or Kyma. There is no Helm chart.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and every push to `main` on GitHub Actions: `npm ci`
+(with the npm cache), `npm run lint`, the compilation of the model, `npm test` and `npm run build` on
+Node.js 22. It needs no secret, and nothing in the repository depends on it. `test/deploy/ci.test.js` checks
+the shape of the workflow; the workflow itself was not run on GitHub. The same commands were run
+locally on a copy of the repository without `node_modules`.
+
 ## Repository layout
 
 | Path | Purpose |
@@ -426,5 +434,6 @@ and Kubernetes or Kyma. There is no Helm chart.
 | `docs/features.md`, `test/docs/` | Map of the CAP features to files, commands and tests, and the tests of the generated API documents and of the map |
 | `xs-security.json` | XSUAA scopes, role templates and role collections |
 | `mta.yaml`, `Dockerfile`, `.dockerignore`, `test/deploy/` | Cloud Foundry deployment descriptor (MTA), container image of the server and their consistency tests |
+| `.github/workflows/ci.yml` | GitHub Actions workflow: install, lint, test and build |
 | `eslint.config.mjs` | Lint configuration |
 | `package.json` | Dependencies, scripts and the `cds` configuration |

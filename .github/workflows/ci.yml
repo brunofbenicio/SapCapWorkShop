@@ -1,0 +1,47 @@
+# Continuous integration: the same checks that run on a developer machine, on every pull request and
+# on every push to main. Nothing else depends on this workflow, and it needs no secret: the tests
+# use SQLite and never call SAP AI Core or SAP HANA.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Node.js 22 is what @cap-js/cds-typer (npm run types, used by a test) requires.
+      - name: Set up Node.js with the npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install the dependencies from the lock file
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Compile the model
+        run: npx cds compile srv --to sql > /dev/null
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
