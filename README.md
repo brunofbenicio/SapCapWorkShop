@@ -104,6 +104,14 @@ Fiori elements UI.
   `AdminService/Tags('warranty')/changes` (role Viewer; not offered by `benicio_1_04Srv`, whose
   Build Code base handler fails on the plugin's join view). The sample data is in the history as
   created by `anonymous`.
+- Traces requests, database calls and the task queue with OpenTelemetry (`@cap-js/telemetry`, a
+  development dependency, so it is not part of the production installation). In development the
+  traces and metrics are printed to the console (`[telemetry] - ...`, `cds.requires.telemetry` in
+  `package.json`); the health check is not traced. `NO_TELEMETRY=true` switches it off, the tests
+  do so (`test/setup.js`) and start the application in a separate process to test it. To export
+  traces in production, make the package a normal dependency and set the kind
+  (`telemetry-to-cloud-logging`, `-to-dynatrace`, `-to-otlp`) with the service binding; this was not
+  verified, there is no BTP access.
 - Emits the events `MessageResolved` (by `markAsResolved`) and `ReplyAdded` (by `addReply`).
   Subscribers are registered in `srv/code/message-events.js`; they currently write a log
   line and are the place to add reactions such as notifications.
