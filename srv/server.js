@@ -9,13 +9,21 @@ const audit = require('./code/audit');
 
 const LOG = cds.log('server');
 
+// Every plugin registers a listener for the event 'served'. With the multitenancy profile there are more
+// than the 10 that Node.js tolerates before it warns about a possible memory leak.
+cds.setMaxListeners(Math.max(cds.getMaxListeners(), 20));
+
 // Milliseconds the shutdown waits for the requests in progress, cds.server.drain_timeout in package.json.
 const DEFAULT_DRAIN_TIMEOUT = 10000;
 
-// A cheap query on the database tells whether the application can work.
+// A cheap query on the database tells whether the application can work. With multitenancy the tenants
+// have their own databases: the check uses the table of the tenants in the database of the provider.
 const lifecycle = createLifecycle({
 	check: async () => {
-		if (cds.db) await cds.db.run(cds.ql.SELECT.one.from('Benicio_1_04.Settings').columns('ID'));
+		if (!cds.db) return;
+		const { multitenancy } = cds.requires;
+		if (multitenancy) await cds.tx({ tenant: multitenancy.t0 ?? 't0' }, tx => tx.run(cds.ql.SELECT.one.from('cds.xt.Tenants').columns('ID')));
+		else await cds.db.run(cds.ql.SELECT.one.from('Benicio_1_04.Settings').columns('ID'));
 	}
 });
 

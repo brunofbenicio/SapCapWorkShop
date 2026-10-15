@@ -33,6 +33,7 @@
     "@sap-cloud-sdk/resilience": "^4.0.2",
     "@sap-cloud-sdk/util": "^4.0.2",
     "@sap/cds": "^9",
+    "@sap/cds-mtxs": "^4.1.1",
     "@sap/low-code-event-handler": "^1.2.5",
     "@sap/xsenv": "^6",
     "@sap/xssec": "^4.8.0",
@@ -129,6 +130,44 @@
         },
         "[production]": {
           "kind": "xsuaa"
+        },
+        "[multitenancy]": {
+          "users": {
+            "t1-agent": {
+              "password": "agent",
+              "tenant": "t1",
+              "roles": [
+                "Viewer",
+                "Agent"
+              ]
+            },
+            "t2-agent": {
+              "password": "agent",
+              "tenant": "t2",
+              "roles": [
+                "Viewer",
+                "Agent"
+              ]
+            },
+            "t1-developer": {
+              "password": "developer",
+              "tenant": "t1",
+              "roles": [
+                "Viewer",
+                "cds.ExtensionDeveloper"
+              ]
+            }
+          },
+          "tenants": {
+            "t1": {
+              "features": []
+            },
+            "t2": {
+              "features": [
+                "internal-note"
+              ]
+            }
+          }
         }
       },
       "S4HCP_ServiceOrder_Odata": {
@@ -141,6 +180,29 @@
         },
         "csrf": true,
         "csrfInBatch": true
+      },
+      "[multitenancy]": {
+        "multitenancy": true,
+        "extensibility": {
+          "[development]": {
+            "tenantCheckInterval": 500
+          }
+        },
+        "toggles": true,
+        "cds.xt.ExtensibilityService": {
+          "element-prefix": [
+            "x_"
+          ],
+          "extension-allowlist": [
+            {
+              "for": [
+                "Benicio_1_04.CustomerMessages"
+              ],
+              "kind": "entity",
+              "new-fields": 3
+            }
+          ]
+        }
       }
     },
     "genai": {
