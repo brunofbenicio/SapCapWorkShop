@@ -1,9 +1,10 @@
-const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST } = test;
 
 const URL = '/service/benicio_1_04/ResponseTemplates';
+const ADMIN_URL = '/service/admin/ResponseTemplates'; // templates are maintained here
 const ANY_STATUS = { validateStatus: () => true };
 
 // Sample data in test/data:
@@ -86,7 +87,7 @@ describe('response templates (temporal data)', () => {
 
     describe('maintenance', () => {
         it('makes a new template valid from now on without end by default', async () => {
-            const created = await POST(URL, { code: 'refund-info', title: 'Refund information', text: 'Your refund is on its way.' });
+            const created = await POST(ADMIN_URL, { code: 'refund-info', title: 'Refund information', text: 'Your refund is on its way.' });
             expect(created.status).toBe(201);
 
             const { data } = await GET(`${URL}?$filter=code eq 'refund-info'&$select=validFrom,validTo`);
@@ -98,7 +99,7 @@ describe('response templates (temporal data)', () => {
         });
 
         it('can plan a template for a future period', async () => {
-            await POST(URL, {
+            await POST(ADMIN_URL, {
                 code: 'summer-hours',
                 title: 'Summer hours',
                 text: 'Our support is open from 9 to 15 in summer.',
@@ -112,7 +113,7 @@ describe('response templates (temporal data)', () => {
         });
 
         it('requires a title and a text (@mandatory)', async () => {
-            const { status, data } = await POST(URL, { code: 'incomplete' }, ANY_STATUS);
+            const { status, data } = await POST(ADMIN_URL, { code: 'incomplete' }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error.code).toBe('MULTIPLE_ERRORS');
@@ -123,7 +124,7 @@ describe('response templates (temporal data)', () => {
         });
 
         it('rejects a category that is not one of the message categories', async () => {
-            const { status, data } = await POST(URL, { code: 'odd', title: 'Odd', text: 'x', messageCategory: 'Billing' }, ANY_STATUS);
+            const { status, data } = await POST(ADMIN_URL, { code: 'odd', title: 'Odd', text: 'x', messageCategory: 'Billing' }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error.code).toBe('ASSERT_ENUM');

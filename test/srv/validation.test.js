@@ -1,11 +1,13 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { POST, PATCH, PUT } = test;
 
 const SERVICE = '/service/benicio_1_04';
 const URL = `${SERVICE}/CustomerMessages`;
 const OPERATIONS = '/service/operations';
+const ADMIN = '/service/admin';
 const ACTIVATE = 'benicio_1_04Srv.draftActivate';
 const EDIT = 'benicio_1_04Srv.draftEdit';
 const ANY_STATUS = { validateStatus: () => true };
@@ -72,7 +74,7 @@ describe('input validation', () => {
         });
 
         it.each(['Bad Code', 'UPPER', 'trailing-', '-leading', 'double--hyphen'])('rejects the tag code "%s"', async code => {
-            const { status, data } = await POST(`${SERVICE}/Tags`, { code, title: 'Tag' }, ANY_STATUS);
+            const { status, data } = await POST(`${ADMIN}/Tags`, { code, title: 'Tag' }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error).toMatchObject({ code: 'ASSERT_FORMAT', target: 'code' });
@@ -80,25 +82,25 @@ describe('input validation', () => {
         });
 
         it.each(['refund', 'long-tail-1'])('accepts the tag code "%s"', async code => {
-            expect((await POST(`${SERVICE}/Tags`, { code, title: 'Tag' })).status).toBe(201);
+            expect((await POST(`${ADMIN}/Tags`, { code, title: 'Tag' })).status).toBe(201);
         });
 
         it('rejects a template code that is not a slug', async () => {
-            const { status, data } = await POST(`${SERVICE}/ResponseTemplates`, { code: 'Not A Slug', title: 'T', text: 'x' }, ANY_STATUS);
+            const { status, data } = await POST(`${ADMIN}/ResponseTemplates`, { code: 'Not A Slug', title: 'T', text: 'x' }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error.code).toBe('ASSERT_FORMAT');
         });
 
         it.each(['bad model!', '-gpt', 'gpt 4'])('rejects the model name "%s" in the settings', async aiModelName => {
-            const { status, data } = await PATCH(`${SERVICE}/Settings`, { aiModelName }, ANY_STATUS);
+            const { status, data } = await PATCH(`${ADMIN}/Settings`, { aiModelName }, ANY_STATUS);
 
             expect(status).toBe(400);
             expect(data.error).toMatchObject({ code: 'ASSERT_FORMAT', target: 'aiModelName' });
         });
 
         it.each(['gpt-4.1-mini', 'amazon--nova-lite'])('accepts the model name "%s" in the settings', async aiModelName => {
-            const { status, data } = await PATCH(`${SERVICE}/Settings`, { aiModelName });
+            const { status, data } = await PATCH(`${ADMIN}/Settings`, { aiModelName });
 
             expect(status).toBe(200);
             expect(data.aiModelName).toBe(aiModelName);

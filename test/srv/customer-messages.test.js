@@ -1,6 +1,7 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST, PATCH, DELETE } = test;
 
 const SERVICE = '/service/benicio_1_04';
@@ -165,10 +166,10 @@ describe('CustomerMessages service', () => {
 
             const { data } = await GET(active(created.ID));
 
-            expect(data.createdBy).toBe('privileged'); // the user of the dummy authentication
+            expect(data.createdBy).toBe('admin'); // the default test user
             expect(new Date(data.createdAt).getTime()).toBeGreaterThan(Date.parse('2025-01-01'));
             expect(data.modifiedAt).toBeTruthy();
-            expect(data.modifiedBy).toBe('privileged');
+            expect(data.modifiedBy).toBe('admin');
         });
 
         it('updates modifiedAt but keeps createdAt when a message is edited', async () => {
@@ -182,7 +183,7 @@ describe('CustomerMessages service', () => {
             expect(after.createdAt).toBe(before.createdAt);
             expect(after.createdBy).toBe(before.createdBy);
             expect(Date.parse(after.modifiedAt)).toBeGreaterThan(Date.parse(before.modifiedAt));
-            expect(after.modifiedBy).toBe('privileged');
+            expect(after.modifiedBy).toBe('admin');
         });
     });
 

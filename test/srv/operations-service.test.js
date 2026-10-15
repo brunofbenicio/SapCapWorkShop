@@ -1,7 +1,8 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 const { SELECT, UPDATE } = cds.ql;
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST, PATCH } = test;
 
 const SERVICE = '/service/operations';
@@ -51,7 +52,7 @@ describe('OperationsService', () => {
             expect(data).toMatchObject({
                 ID: FREEZER_COMPRESSOR,
                 status: 'Resolved',
-                resolvedBy: 'privileged',
+                resolvedBy: 'admin',
                 resolution: 'Compressor replaced'
             });
             expect(Date.parse(data.resolvedAt)).toBeGreaterThan(Date.parse('2025-01-01'));
@@ -62,7 +63,7 @@ describe('OperationsService', () => {
 
             expect(await readRow(FREEZER_COMPRESSOR)).toMatchObject({
                 status: 'Resolved',
-                resolvedBy: 'privileged',
+                resolvedBy: 'admin',
                 resolution: 'Compressor replaced'
             });
         });

@@ -1,4 +1,5 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 // The AI call is mocked and fails by default, so the seeded values stay as they are.
 jest.mock('../../srv/code/genai/orchestration', () => ({
@@ -8,7 +9,7 @@ jest.mock('../../srv/code/genai/orchestration', () => ({
 const { preprocessCustomerMessage } = require('../../srv/code/genai/orchestration');
 const { INSERT, DELETE } = cds.ql;
 
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST, PATCH } = test;
 
 const URL = '/service/benicio_1_04/CustomerMessages';

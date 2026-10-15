@@ -11,8 +11,9 @@ process.env.CDS_REQUIRES_MESSAGING_FILE = messageBox;
 process.env.CDS_REQUIRES_MESSAGING_INTERVAL = '50';
 
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { POST } = test;
 
 const FREEZER_COMPRESSOR = '08bb27b2-9357-4598-9ea3-6b9f8dcb6d99'; // 3166, open
@@ -51,7 +52,7 @@ describe('file-based messaging (development profile)', () => {
 
         await eventually(() => eventLog.info.mock.calls.length > 0);
 
-        expect(eventLog.info).toHaveBeenCalledWith(`CustomerMessage 3166 (${FREEZER_COMPRESSOR}) was resolved by privileged`);
+        expect(eventLog.info).toHaveBeenCalledWith(`CustomerMessage 3166 (${FREEZER_COMPRESSOR}) was resolved by admin`);
         expect(fs.existsSync(messageBox)).toBe(true);
     });
 });

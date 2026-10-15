@@ -1,7 +1,8 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 const { SELECT } = cds.ql;
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST } = test;
 
 const SERVICE = '/service/operations';
@@ -70,7 +71,7 @@ describe('events of the OperationsService', () => {
             expect(data).toMatchObject({
                 messageID: FREEZER_COMPRESSOR,
                 customerMessageID: 3166,
-                resolvedBy: 'privileged',
+                resolvedBy: 'admin',
                 resolution: 'Compressor replaced'
             });
             expect(Date.parse(data.resolvedAt)).toBeGreaterThan(Date.parse('2025-01-01'));
@@ -101,7 +102,7 @@ describe('events of the OperationsService', () => {
         it('is handled by the subscriber', async () => {
             await action(FREEZER_COMPRESSOR, 'markAsResolved');
 
-            expect(EVENTS(eventLog)).toEqual([`CustomerMessage 3166 (${FREEZER_COMPRESSOR}) was resolved by privileged`]);
+            expect(EVENTS(eventLog)).toEqual([`CustomerMessage 3166 (${FREEZER_COMPRESSOR}) was resolved by admin`]);
         });
     });
 

@@ -1,7 +1,8 @@
 const cds = require('@sap/cds');
+const { startServer } = require('../helpers/server');
 
 const { SELECT, UPDATE } = cds.ql;
-const test = cds.test(__dirname + '/../..');
+const test = startServer();
 const { GET, POST } = test;
 
 const SERVICE = '/service/benicio_1_04';
