@@ -1,0 +1,125 @@
+# GraphQL endpoint (@cap-js/graphql): POST /graphql
+#
+# One endpoint serves the services that are annotated for GraphQL: benicio_1_04Srv (the messages,
+# read-only in GraphQL) and AdminService (tags, response templates, settings). The schema is
+# generated from the model: a service is a top-level field, an entity a field with the arguments
+# filter, orderBy, top and skip, and a list is a connection with nodes and totalCount.
+# GraphiQL, the browser IDE, is served at http://localhost:4004/graphql in development.
+#
+# GraphQL reports errors in the response body (HTTP 200): see errors[0].extensions.code, for
+# example 401 without credentials and 403 without the role. Mutations create, update and delete.
+# Start the app with `npm run cds-watch` and run the requests top down. The users are the mocked
+# users (the password is the user name).
+
+@host = http://localhost:4004
+
+### Messages of France, sorted, the second page of two
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "query": "{ benicio_1_04Srv { CustomerMessages(filter: { originatingCountry: { eq: \"France\" } }, orderBy: [{ customerMessageID: asc }], top: 2, skip: 2) { nodes { customerMessageID customerName productName priorityScore } totalCount } } }"
+}
+
+### One message with its replies and the titles of its tags (query with a variable)
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "query": "query ($id: Int) { benicio_1_04Srv { CustomerMessages(filter: { customerMessageID: { eq: $id } }) { nodes { displayTitle replies { nodes { author text } } tags { nodes { tag { title } } } } } } }",
+  "variables": { "id": 3166 }
+}
+
+### Message categories in German
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic viewer viewer
+Content-Type: application/json
+Accept-Language: de
+
+{
+  "query": "{ benicio_1_04Srv { MessageCategories(orderBy: [{ code: asc }]) { nodes { code name } } } }"
+}
+
+### The schema: which services does the endpoint serve?
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "query": "{ __schema { queryType { fields { name } } } }"
+}
+
+### Reference data of the AdminService
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "query": "{ AdminService { Tags(orderBy: [{ code: asc }]) { nodes { code title } } } }"
+}
+
+### Create a tag (mutation): agents may
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic agent agent
+Content-Type: application/json
+
+{
+  "query": "mutation { AdminService { Tags { create(input: { code: \"graphql-demo\", title: \"GraphQL demo\" }) { code title } } } }"
+}
+
+### A viewer may not: errors[0].extensions.code is 403
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic viewer viewer
+Content-Type: application/json
+
+{
+  "query": "mutation { AdminService { Tags { create(input: { code: \"graphql-viewer\", title: \"Not allowed\" }) { code } } } }"
+}
+
+### Update the tag
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "query": "mutation { AdminService { Tags { update(filter: { code: { eq: \"graphql-demo\" } }, input: { title: \"GraphQL demo (renamed)\" }) { code title } } } }"
+}
+
+### Delete the tag: the result is the number of deleted tags
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "query": "mutation { AdminService { Tags { delete(filter: { code: { eq: \"graphql-demo\" } }) } } }"
+}
+
+### Messages are created and changed with the OData service (drafts): GraphQL refuses with GRAPHQL_READ_ONLY
+# expect: 200
+POST {{host}}/graphql
+Authorization: Basic admin admin
+Content-Type: application/json
+
+{
+  "query": "mutation { benicio_1_04Srv { CustomerMessages { create(input: { customerMessageID: 9100 }) { ID } } } }"
+}
+
+### Without credentials: errors[0].extensions.code is 401
+# expect: 200
+POST {{host}}/graphql
+Content-Type: application/json
+
+{
+  "query": "{ AdminService { Tags { nodes { code } } } }"
+}

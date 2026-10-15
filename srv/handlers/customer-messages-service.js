@@ -11,9 +11,17 @@ const ALLOWED_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'applicatio
  */
 module.exports = class CustomerMessagesService extends benicio_1_04Srv {
 	async init() {
+		this.before('*', req => this.checkGraphQLReadOnly(req));
 		this.before('SAVE', 'CustomerMessages', req => this.checkMessage(req));
 		this.before(['NEW', 'UPDATE'], 'CustomerMessageAttachments.drafts', req => this.checkUpload(req));
 		return super.init();
+	}
+
+	// Messages are created and changed in drafts, which the GraphQL adapter cannot activate (it has no
+	// actions) and which a direct GraphQL update would bypass. So GraphQL may only read this service.
+	checkGraphQLReadOnly(req) {
+		if (req.event === 'READ' || !req.http?.req) return;
+		if (req.http.req.baseUrl === (cds.env.protocols?.graphql?.path ?? '/graphql')) req.reject(405, 'GRAPHQL_READ_ONLY');
 	}
 
 	// Called when a draft is saved (activated), also for new messages
