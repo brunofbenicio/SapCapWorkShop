@@ -40,3 +40,6 @@ env/
 
 # Local secrets
 .env
+
+# Local file-based messaging box (development)
+.cds-msg-box*

@@ -36,6 +36,37 @@ service OperationsService
         byUrgency : many CountPerValue;
     }
 
+    /** Emitted when an agent has resolved a customer message. */
+    event MessageResolved
+    {
+        messageID : UUID;
+        customerMessageID : Integer;
+        resolvedBy : String(255);
+        resolvedAt : Timestamp;
+        resolution : String(1000);
+    }
+
+    /** Emitted when a reply has been added to a customer message. */
+    event ReplyAdded
+    {
+        messageID : UUID;
+        customerMessageID : Integer;
+        replyID : UUID;
+        author : String(100);
+        sentAt : Timestamp;
+    }
+
+    @readonly
+    entity CustomerMessageReplies as
+        projection on my.CustomerMessageReplies
+        {
+            ID,
+            message,
+            author,
+            text,
+            sentAt
+        };
+
     @readonly
     entity CustomerMessages as
         projection on my.CustomerMessages
@@ -62,8 +93,10 @@ service OperationsService
         }
         actions
         {
-            /** Closes the message. Fails with 409 if it is already resolved. */
+            /** Closes the message and emits MessageResolved. Fails with 409 if it is already resolved. */
             action markAsResolved(resolution : String(1000)) returns CustomerMessages;
+            /** Adds a reply to the message and emits ReplyAdded. */
+            action addReply(author : String(100) @mandatory, text : String(2000) @mandatory) returns CustomerMessageReplies;
             /** Suggests how urgently the message should be handled, based on priorityScore. */
             function suggestedPriority() returns SuggestedPriority;
         };

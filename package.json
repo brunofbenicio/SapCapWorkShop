@@ -67,6 +67,18 @@
         "db": "hana",
         "auth": "xsuaa"
       },
+      "messaging": {
+        "[development]": {
+          "kind": "file-based-messaging",
+          "file": ".cds-msg-box"
+        },
+        "[test]": {
+          "kind": "local-messaging"
+        },
+        "[production]": {
+          "kind": "local-messaging"
+        }
+      },
       "auth": {
         "[development]": {
           "kind": "dummy"
