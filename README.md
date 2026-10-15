@@ -361,6 +361,30 @@ with `package.json`, `xs-security.json` and the output of `cds build --productio
 the archive locally. **Not verified (no BTP access):** `cf deploy`, the service plans (for example the
 plan of the audit log service) and the running application on Cloud Foundry.
 
+## Run in a container
+
+The `Dockerfile` builds an image of the CAP server for the `production` profile. The stage `build` runs
+`npm ci` and `npm run build` (`cds build --production`); the stage `runtime` holds only `gen/srv` with its
+production dependencies, runs as the user `node` and starts `cds-serve` directly, so the server receives
+SIGTERM and shuts down gracefully. A `HEALTHCHECK` calls `/health`. `.dockerignore` keeps secrets, installed
+packages, tests and documents out of the build.
+
+```sh
+docker build -t customer-messages .
+docker run --rm -p 4004:4004 <bindings> customer-messages   # PORT changes the port
+```
+
+The image contains no configuration and no secret. The production profile needs the bindings of an SAP HANA
+HDI container and of XSUAA (and, as described above, the destination, the audit log and AI Core); pass them as
+environment variables or service bindings when the container starts. Without a HANA binding the server stops
+at startup with "no HDI container ... bound to application". The database tables are not created by the
+image: deploy `gen/db` to the HDI container first (the `db-deployer` of the MTA does that on Cloud Foundry).
+
+The image was built with a local Docker daemon, and the container started as the user `node` and ran up to
+the connection to the database. `test/deploy/docker.test.js` checks the Dockerfile and the build context
+without Docker. **Not verified:** a run against SAP HANA and XSUAA, the shutdown on SIGTERM in the container,
+and Kubernetes or Kyma. There is no Helm chart.
+
 ## Repository layout
 
 | Path | Purpose |
@@ -397,6 +421,6 @@ plan of the audit log service) and the running application on Cloud Foundry.
 | `srv/external/` | Imported S/4HANA service order OData V2 service; `data/` holds the mock data for development and tests |
 | `test/` | Jest tests (`*.test.js`), `setup.js` and the sample data in `test/data` |
 | `xs-security.json` | XSUAA scopes, role templates and role collections |
-| `mta.yaml`, `test/deploy/` | Cloud Foundry deployment descriptor (MTA) and its consistency test |
+| `mta.yaml`, `Dockerfile`, `.dockerignore`, `test/deploy/` | Cloud Foundry deployment descriptor (MTA), container image of the server and their consistency tests |
 | `eslint.config.mjs` | Lint configuration |
 | `package.json` | Dependencies, scripts and the `cds` configuration |
