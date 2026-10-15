@@ -1,8 +1,24 @@
 {
   "name": "Benicio_1_04",
   "version": "1.0.0",
-  "description": "A simple CAP project.",
-  "repository": "<Add your repository here>",
+  "description": "Customer Messages application built with SAP CAP, enriching incoming messages with GenAI (translation, summary, category, urgency, sentiment).",
+  "keywords": [
+    "sap",
+    "cap",
+    "cds",
+    "odata",
+    "fiori",
+    "genai",
+    "sap-ai-sdk"
+  ],
+  "homepage": "https://github.com/brunofbenicio/SapCapWorkShop#readme",
+  "bugs": {
+    "url": "https://github.com/brunofbenicio/SapCapWorkShop/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brunofbenicio/SapCapWorkShop.git"
+  },
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
@@ -32,6 +48,7 @@
   },
   "scripts": {
     "start": "cds-serve",
+    "build": "cds build --production",
     "start-local": "npm run generate-entry-point && npm run cds-watch",
     "generate-entry-point": "dev-cap-tools gen-entrypoint",
     "cds-watch": "cds watch --open",
